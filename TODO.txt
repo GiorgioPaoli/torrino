@@ -1,0 +1,27 @@
+
+
+classe Move
+-> moveGeneration
+
+
+
+REGOLE:
+creare un file a parte per le regole tipo rules.h:
+
+- movimento pezzi e sovrapposizione (controllo colore ...)
+
+- catture
+- scacchi 
+- castello 
+- pin 
+- promozioni
+- terminazione partita
+	- stale mate (moveGeneration = 0 mosse)
+
+UTILITY:
+- maschere per i pezzi
+	- zobrist hashing
+	- trasposition table
+
+
+
