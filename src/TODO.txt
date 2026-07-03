@@ -1,0 +1,5 @@
+cambiare in occupiedAll
+
+scrivere printBoard
+
+levare inline a initBoard
