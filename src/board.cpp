@@ -67,6 +67,8 @@ void Board::syncMailboxFromBitboards(){
     }
 }
 
+
+// --- HELPER FUNCTIONS ---
 void Board::printBoard(){
     const char* pieceChars = "PNBRQKpnbrqk.";  // maiuscolo bianco, minuscolo nero, '.' vuoto
     

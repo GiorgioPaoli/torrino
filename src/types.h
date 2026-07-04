@@ -32,8 +32,6 @@ enum Square {
     SQUARE_NB
 };
 
-// bit corrispondente a una casa
-constexpr uint64_t SQ_BB(int sq) { return 1ULL << sq; }
 
 constexpr uint64_t RANK_1 = 0x00000000000000FFULL;
 constexpr uint64_t RANK_2 = 0x000000000000FF00ULL;
@@ -53,3 +51,20 @@ constexpr uint64_t FILE_F = 0x0606060606060606ULL;
 constexpr uint64_t FILE_G = 0x0707070707070707ULL;
 constexpr uint64_t FILE_H = 0x0808080808080808ULL;
 
+
+// --- FUNZIONI UTILI ---
+
+inline Piece makePiece(Color c, PieceType pt) {
+        return static_cast<Piece>(c * 6 + pt);
+    }
+
+// bit corrispondente a una casa
+constexpr uint64_t SQ_BB(int sq) { return 1ULL << sq; }
+
+constexpr int fileOf(Square sq){
+    return sq & 7;
+}
+
+constexpr int rankOf(Square sq){
+    return sq >> 3;
+}

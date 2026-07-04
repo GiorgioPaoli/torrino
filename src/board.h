@@ -3,11 +3,23 @@
 
 #include "types.h"
 
-
-
 class Board {
 public:
+    // da tenere a mente, bisogna tenerli in considerazione per eventuali utilizzi futuri
+    uint64_t whitePawns;
+    uint64_t whiteKnights;
+    uint64_t whiteBishops;
+    uint64_t whiteRooks;
+    uint64_t whiteQueens;
+    uint64_t whiteKing;
     
+    uint64_t blackPawns;
+    uint64_t blackKnights;
+    uint64_t blackBishops;
+    uint64_t blackRooks;
+    uint64_t blackQueens;
+    uint64_t blackKing;
+
     // caselle occupate dal colore e quelle di tutto
     uint64_t occupiedByColor[COLOR_NB];
     uint64_t occupiedAll;
@@ -32,16 +44,14 @@ public:
     bool isBlackPiece();
     
     void updateOccupancy();
-    void syncMailboxFromBitboards();
+    void syncMailboxFromBitboards();        // aggiunge tutte le pedine alla board[64]
 
-    inline Piece makePiece(Color c, PieceType pt) {
-        return static_cast<Piece>(c * 6 + pt);
-    }
-
+    
     // --- HELPER FUNCTIONS ---
     void printBoard();
-
+    
     // --- INLINE FUNCTIONS ---
-
+    
+    
     
 };
