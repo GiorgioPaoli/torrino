@@ -42,10 +42,25 @@ void Board::initBoard(){
     halfMoveClock = 0;
 }
 
+void Board::clearBoard(){
+    for (int c = 0; c < COLOR_NB; c++){
+        for (int pt = 0; pt < PIECE_TYPE_NB; pt++){
+            pieceBB[c][pt] = 0ULL;
+        }
+        occupiedByColor[c] = 0ULL;
+    }
+    occupiedAll = 0ULL;
+
+    for (int sq = 0; sq < 64; sq++) {
+        board[sq] = NO_PIECE;
+    }
+
+}
+
 void Board::updateOccupancy(){
     occupiedByColor[WHITE] = 0ULL;
     occupiedByColor[BLACK] = 0ULL;
-    for (int pt = 0; pt <= PIECE_TYPE_NB; pt++){
+    for (int pt = 0; pt < PIECE_TYPE_NB; pt++){
         occupiedByColor[WHITE] |= pieceBB[WHITE][pt];
         occupiedByColor[BLACK] |= pieceBB[BLACK][pt];
     }
@@ -83,4 +98,17 @@ void Board::printBoard(){
     }
     std::cout << "\n   a b c d e f g h\n";
 
+}
+
+void Board::printBoardFromBB(uint64_t bb){
+    std::cout << '\n';
+    for (int rank = 7; rank >= 0; rank--){
+        std::cout << (rank + 1) << "  ";
+        for (int file = 0; file < 8; file++){
+            int sq = rank * 8 + file;
+            std::cout << (((bb >> sq) & 1ULL) ? 'x' : '.') << ' '; 
+        }
+        std::cout << '\n';
+    }
+    std::cout << "\n   a b c d e f g h\n";
 }

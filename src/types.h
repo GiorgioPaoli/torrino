@@ -54,17 +54,11 @@ constexpr uint64_t FILE_H = 0x0808080808080808ULL;
 
 // --- FUNZIONI UTILI ---
 
-inline Piece makePiece(Color c, PieceType pt) {
-        return static_cast<Piece>(c * 6 + pt);
-    }
+inline Piece makePiece(Color c, PieceType pt) {return static_cast<Piece>(c * 6 + pt);}
 
 // bit corrispondente a una casa
 constexpr uint64_t SQ_BB(int sq) { return 1ULL << sq; }
 
-constexpr int fileOf(Square sq){
-    return sq & 7;
-}
+constexpr int fileOf(int sq) {return sq & 7;}
 
-constexpr int rankOf(Square sq){
-    return sq >> 3;
-}
+constexpr int rankOf(int sq) {return sq >> 3;}

@@ -43,7 +43,7 @@ popcount(), lsbIndex(), popLsb()
 printBB()
 shiftNorth/South/East/West() (con maschere anti-wraparound)
 
---- META ---
+--- FATTO ---
 3. attacks.h + attacks.cpp (tabelle pre-calcolate, riempite una volta all'avvio)
 
 uint64_t knightAttacks[64], kingAttacks[64], pawnAttacks[COLOR_NB][64]

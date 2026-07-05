@@ -39,6 +39,7 @@ public:
 
 
     void initBoard();
+    void clearBoard();
     bool isOccupied();
     bool isWhitePiece();
     bool isBlackPiece();
@@ -49,6 +50,7 @@ public:
     
     // --- HELPER FUNCTIONS ---
     void printBoard();
+    void printBoardFromBB(uint64_t bb);
     
     // --- INLINE FUNCTIONS ---
     
