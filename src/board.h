@@ -1,5 +1,8 @@
 #pragma once
 #include <cstdint>
+#include <string>
+#include <sstream>
+#include <cctype>
 
 #include "types.h"
 #include "move.h"
@@ -51,12 +54,14 @@ public:
     // --- MOVE FUNCTIONS ---
     void makeMove(Move m, UndoInfo &undo);
     void unmakeMove(Move m, const UndoInfo &undo);
-
     
     // --- HELPER FUNCTIONS ---
     void printBoard();
     void printBoardFromBB(uint64_t bb);
-    
+
+    // --- FEN FUNCTIONS ---
+    void loadFEN(const std::string &fen);
+
     // --- INLINE FUNCTIONS ---
     
     

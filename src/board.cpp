@@ -56,6 +56,10 @@ void Board::clearBoard(){
         board[sq] = NO_PIECE;
     }
 
+    sideToMove = WHITE;
+    enPassantSquare = -1;
+    castlingRights = 0;
+    halfMoveClock = 0;
 }
 
 void Board::updateOccupancy(){
@@ -267,3 +271,71 @@ void Board::printBoardFromBB(uint64_t bb){
     }
     std::cout << "\n   a b c d e f g h\n";
 }
+
+// --- FEN FUNCTIONS ---
+void Board::loadFEN(const std::string &fen){
+    clearBoard();
+
+    std::istringstream iss(fen);
+    std::string placement, activeColor, castling, epSquare;
+    int halfmove, fullmove;
+    iss >> placement >> activeColor >> castling >> epSquare >> halfmove >> fullmove;
+    
+    // scrive tutto nella board, non c'è bisogno di chiamare occupancy e syncMailBox
+    int rank = 7, file = 0;
+    for (char c : placement){
+        if (c == '/') {
+            rank--;
+            file = 0;
+        }
+        else if (isdigit(c)){
+            file += c - '0';
+        }
+        else {
+            int sq = rank * 8 + file;
+            Color color = (isupper(c)) ? WHITE : BLACK;
+            PieceType pt;
+
+            switch (tolower(c)) {
+                case 'p': pt = PAWN;    break;
+                case 'n': pt = KNIGHT;  break;
+                case 'b': pt = BISHOP;  break;
+                case 'r': pt = ROOK;    break; 
+                case 'q': pt = QUEEN;   break;
+                case 'k': pt = KING;    break;
+            }
+
+            setBit(pieceBB[color][pt], sq);
+            board[sq] = makePiece(color, pt);
+
+            file++;
+        }
+    }
+
+    // side to move
+    sideToMove = (activeColor == "w") ? WHITE : BLACK;
+
+    castlingRights = 0;
+    for (char c : castling) {
+        switch (c) {
+            case 'K': setBitInt(castlingRights, 0); break;
+            case 'Q': setBitInt(castlingRights, 1); break;
+            case 'k': setBitInt(castlingRights, 2); break;
+            case 'q': setBitInt(castlingRights, 3); break;
+        }
+    }
+
+    //enPassant
+    if (epSquare == "-") {
+        enPassantSquare = -1;
+    } else {
+        int file = epSquare[0] - 'a';
+        int rank = epSquare[1] - '1';
+        enPassantSquare = rank * 8 + file;
+    }
+
+    halfMoveClock = halfmove;
+}
+
+
+
