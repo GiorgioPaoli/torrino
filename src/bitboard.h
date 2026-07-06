@@ -2,7 +2,9 @@
 #include "types.h"
 
 constexpr void setBit(uint64_t &b, int i) {b |= 1ULL << i;}
-constexpr bool getBit(uint64_t b, int i) {return (b >> i) & 1ULL;} // ritorna 0 o 1 = true o false
+constexpr void clearBitInt(int &b, int i) {b &= ~(1 << i);}
+constexpr void clearBit(uint64_t &b, int i) {b &= ~(1ULL << i);}
+constexpr bool getBit(uint64_t b, int i) {return (b >> i) & 1ULL;} // ritorna 0 = false o 1 = true
 
 
 // returna il numero di bit accesi in bb

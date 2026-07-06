@@ -2,6 +2,7 @@
 #include <cstdint>
 
 #include "types.h"
+#include "move.h"
 
 class Board {
 public:
@@ -46,6 +47,10 @@ public:
     
     void updateOccupancy();
     void syncMailboxFromBitboards();        // aggiunge tutte le pedine alla board[64]
+
+    // --- MOVE FUNCTIONS ---
+    void makeMove(Move m, UndoInfo &undo);
+    void unmakeMove(Move m, const UndoInfo &undo);
 
     
     // --- HELPER FUNCTIONS ---

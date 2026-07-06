@@ -1,5 +1,6 @@
 #include <iostream>
 #include "board.h"
+#include "bitboard.h"
 
 void Board::initBoard(){
     // azzero tutto 
@@ -82,6 +83,160 @@ void Board::syncMailboxFromBitboards(){
     }
 }
 
+// --- MOVE FUNCTIONS ---
+
+/*  non fa updateOccupancy e syncMailBoxFromBitboards perche sarebbero troppo lente
+    aggiorna direttamente le singole BB con XOR
+    Gestisce tutti i casi per ogni flag 
+    
+    Salva tutte le informazioni in &undo, in modo che in unmakeMove si puo ripristinare tutto,
+    comprese tutte le flag e qualsiasi cattura / enPassant / promozione ecc
+*/
+void Board::makeMove(Move m, UndoInfo &undo){
+    int from = m.fromSquare;
+    int to = m.toSquare;
+    int flags = m.flags;
+    
+    Piece movingPiece = board[from];
+    Color us = sideToMove;
+    Color them = (us == WHITE) ? BLACK : WHITE;
+    
+    PieceType pt = pieceTypeOf(movingPiece);
+
+    undo.capturedPiece = board[to];
+    undo.castlingRights = castlingRights;
+    undo.enPassantSquare = enPassantSquare;
+    undo.halfMoveClock = halfMoveClock;
+
+    // aggiorno la nostra BB
+    uint64_t fromTo = SQ_BB(from) | SQ_BB(to);
+    pieceBB[us][pt] ^= fromTo; // spegne il bit di from e accende quello in to
+
+    // aggiorno la BB avversaria -> CATTURA
+    if (undo.capturedPiece != NO_PIECE){
+        PieceType capturedPieceType = pieceTypeOf(undo.capturedPiece);
+        pieceBB[them][capturedPieceType] ^= SQ_BB(to); // spegne il bit del pezzo catturato
+    }
+
+    // aggiorna mailBox
+    board[from] = NO_PIECE;
+    board[to] = movingPiece;
+    
+    // aggiorno la occupancy
+    occupiedByColor[us] ^= SQ_BB(from) | SQ_BB(to);
+    if (undo.capturedPiece != NO_PIECE){
+        occupiedByColor[them] ^= SQ_BB(to);
+    } 
+    occupiedAll = occupiedByColor[WHITE] | occupiedByColor[BLACK];
+    
+    // FLAGS
+    enPassantSquare = -1;
+    
+    // gestione DOUBLE_PAWN_PUSH
+    if (flags == DOUBLE_PAWN_PUSH){
+        enPassantSquare = (from + to) / 2;
+    }
+    
+    switch (flags) {
+        case EN_PASSANT: {
+            /*  il pedone catturato NON è su to, è sulla stessa colonna di to,
+                e su rank di from, la cattura avviene in diagonale.
+                Il pedone va tolto e va spostato il pezzo da from a to
+            */
+            int capturedSq = (us == WHITE) ? (to - 8) : (to + 8);
+            pieceBB[them][PAWN] ^= SQ_BB(capturedSq);
+            board[capturedSq] = NO_PIECE;
+            occupiedByColor[them] ^= SQ_BB(capturedSq);
+            occupiedAll = occupiedByColor[WHITE] | occupiedByColor[BLACK];
+            break;
+        }
+        case CASTLE_KINGSIDE: {
+            // torre da h1 -> f1, il re viene gia spostato
+            int rookFrom = (us == WHITE) ? H1 : H8;
+            int rookTo = (us == WHITE) ? F1 : F8;
+            pieceBB[us][ROOK] ^= SQ_BB(rookFrom) | SQ_BB(rookTo); 
+            board[rookFrom] = NO_PIECE;
+            board[rookTo] = makePiece(us, ROOK);
+            occupiedByColor[us] ^= SQ_BB(rookFrom) | SQ_BB(rookTo);
+            occupiedAll = occupiedByColor[WHITE] | occupiedByColor[BLACK];
+            break;
+        }
+        case CASTLE_QUEENSIDE: {
+            // torre da a1 -> d1, il re viene gia spostato
+            int rookFrom = (us == WHITE) ? A1 : A8;
+            int rookTo = (us == WHITE) ? D1 : D8;
+            pieceBB[us][ROOK] ^= SQ_BB(rookFrom) | SQ_BB(rookTo);
+            board[rookFrom] = NO_PIECE;
+            board[rookTo] = makePiece(us, ROOK);
+            occupiedByColor[us] ^= SQ_BB(rookFrom) | SQ_BB(rookTo);
+            occupiedAll = occupiedByColor[WHITE] | occupiedByColor[BLACK];
+            break;
+        }
+        case PROMOTION_QUEEN: case PROMOTION_QUEEN_CAPTURE: {
+            // cambia il pezzo su to da pedone a donna
+            pieceBB[us][PAWN] ^= SQ_BB(to);
+            pieceBB[us][QUEEN] ^= SQ_BB(to);
+            board[to] = makePiece(us, QUEEN);
+            break;
+        }
+        case PROMOTION_ROOK: case PROMOTION_ROOK_CAPTURE: {
+            // cambia il pezzo su to da pedone a torre
+            pieceBB[us][PAWN] ^= SQ_BB(to);
+            pieceBB[us][ROOK] ^= SQ_BB(to);
+            board[to] = makePiece(us, ROOK);
+            break;
+        }
+        case PROMOTION_BISHOP: case PROMOTION_BISHOP_CAPTURE: {
+            // cambia il pezzo su to da pedone ad alfiere
+            pieceBB[us][PAWN] ^= SQ_BB(to);
+            pieceBB[us][BISHOP] ^= SQ_BB(to);
+            board[to] = makePiece(us, BISHOP);
+            break;
+        }
+        case PROMOTION_KNIGHT: case PROMOTION_KNIGHT_CAPTURE: {
+            // cambia il pezzo su to da pedone a cavallo
+            pieceBB[us][PAWN] ^= SQ_BB(to);
+            pieceBB[us][KNIGHT] ^= SQ_BB(to);
+            board[to] = makePiece(us, KNIGHT);
+            break;
+        }
+        default:
+            break;
+    }
+
+    if (undo.capturedPiece != NO_PIECE || pt == PAWN){
+        halfMoveClock = 0;
+    }
+    else
+        halfMoveClock++;
+
+    // aggiorna castlingRights se muove re o torre
+    if (pt == KING){
+        if (us == WHITE) {
+            clearBitInt(castlingRights, 0);
+            clearBitInt(castlingRights, 1);
+        } else {
+            clearBitInt(castlingRights, 2);
+            clearBitInt(castlingRights, 3);
+        }
+    }
+    if (pt == ROOK){
+        if (from == H1) clearBitInt(castlingRights, 0);
+        if (from == A1) clearBitInt(castlingRights, 1);
+        if (from == H8) clearBitInt(castlingRights, 2);
+        if (from == A8) clearBitInt(castlingRights, 3);
+    }
+    if (to == H1) clearBitInt(castlingRights, 0);
+    if (to == A1) clearBitInt(castlingRights, 1);
+    if (to == H8) clearBitInt(castlingRights, 2);
+    if (to == A8) clearBitInt(castlingRights, 3);
+
+    sideToMove = them;
+}
+
+
+void Board::unmakeMove(Move m, const UndoInfo &undo){
+}
 
 // --- HELPER FUNCTIONS ---
 void Board::printBoard(){
