@@ -6,7 +6,7 @@ constexpr void setBitInt(int &b, int i) {b |= 1 << i;}
 constexpr void clearBit(uint64_t &b, int i) {b &= ~(1ULL << i);}
 constexpr void clearBitInt(int &b, int i) {b &= ~(1 << i);}
 constexpr bool getBit(uint64_t b, int i) {return (b >> i) & 1ULL;} // ritorna 0 = false o 1 = true
-
+constexpr bool getBitInt(int b, int i) {return (b >> i) & 1;}
 
 // returna il numero di bit accesi in bb
 constexpr int popcount(uint64_t bb){
