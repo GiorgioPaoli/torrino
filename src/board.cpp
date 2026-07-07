@@ -1,6 +1,6 @@
 #include <iostream>
 #include "board.h"
-#include "bitboard.h"
+#include "attacks.h"
 
 void Board::initBoard(){
     // azzero tutto 
@@ -89,7 +89,8 @@ void Board::syncMailboxFromBitboards(){
 
 // --- MOVE FUNCTIONS ---
 
-/*  non fa updateOccupancy e syncMailBoxFromBitboards perche sarebbero troppo lente
+/*  
+    non fa updateOccupancy e syncMailBoxFromBitboards perche sarebbero troppo lente
     aggiorna direttamente le singole BB con XOR
     Gestisce tutti i casi per ogni flag 
     
@@ -143,7 +144,8 @@ void Board::makeMove(Move m, UndoInfo &undo){
     
     switch (flags) {
         case EN_PASSANT: {
-            /*  il pedone catturato NON è su to, è sulla stessa colonna di to,
+            /*  
+                il pedone catturato NON è su to, è sulla stessa colonna di to,
                 e su rank di from, la cattura avviene in diagonale.
                 Il pedone va tolto e va spostato il pezzo da from a to
             */
@@ -238,9 +240,122 @@ void Board::makeMove(Move m, UndoInfo &undo){
     sideToMove = them;
 }
 
-
 void Board::unmakeMove(Move m, const UndoInfo &undo){
+    // restore dei campi semplici
+    int to = m.toSquare;
+    int from = m.fromSquare;
+    int flags = m.flags;
+
+    Piece movingPiece = board[to];
+    Color us = (sideToMove == BLACK) ? WHITE : BLACK;
+    Color them = (us == WHITE) ? BLACK : WHITE;
+
+    PieceType pt = pieceTypeOf(movingPiece);
+
+    Piece capturedPiece = undo.capturedPiece;     
+    castlingRights = undo.castlingRights;
+    enPassantSquare = undo.enPassantSquare;
+    halfMoveClock = undo.halfMoveClock;
+
+    // aggiorna la loro BB
+    uint64_t fromTo = SQ_BB(from) | SQ_BB(to);
+
+    bool isPromotion = (flags >= PROMOTION_QUEEN && flags <= PROMOTION_KNIGHT_CAPTURE);
+    if (!isPromotion) {
+        pieceBB[us][pt] ^= fromTo;
+    }
+
+    board[to] = NO_PIECE;
+    board[from] = movingPiece;
+
+    // restore nostra BB -> CATTURA
+    if (capturedPiece != NO_PIECE){
+        PieceType capturedPieceType = pieceTypeOf(capturedPiece);
+        pieceBB[them][capturedPieceType] ^= SQ_BB(m.toSquare); 
+        board[to] = capturedPiece;
+    }
+
+    // restore Occupancy
+    occupiedByColor[us] ^= SQ_BB(to) | SQ_BB(from);
+    if (capturedPiece != NO_PIECE){
+        occupiedByColor[them] ^= SQ_BB(to);
+    }
+    occupiedAll = occupiedByColor[WHITE] | occupiedByColor[BLACK];
+
+
+    switch (flags) {
+        case EN_PASSANT: {
+            int capturedSq = (us == WHITE) ? (to - 8) : (to + 8);
+            pieceBB[them][PAWN] ^= SQ_BB(capturedSq);
+            board[capturedSq] = makePiece(them, PAWN);
+            occupiedByColor[them] ^= SQ_BB(capturedSq);
+            occupiedAll = occupiedByColor[WHITE] | occupiedByColor[BLACK];
+            break;
+        }
+        case CASTLE_KINGSIDE: {
+            int rookFrom = (us == WHITE) ? H1 : H8;
+            int rookTo = (us == WHITE) ? F1 : F8;
+            pieceBB[us][ROOK] ^= SQ_BB(rookFrom) | SQ_BB(rookTo); 
+            board[rookTo] = NO_PIECE;
+            board[rookFrom] = makePiece(us, ROOK);
+            occupiedByColor[us] ^= SQ_BB(rookFrom) | SQ_BB(rookTo);
+            occupiedAll = occupiedByColor[WHITE] | occupiedByColor[BLACK];
+            break;
+        }
+        case CASTLE_QUEENSIDE: {
+            int rookFrom = (us == WHITE) ? A1 : A8;
+            int rookTo = (us == WHITE) ? D1 : D8;
+            pieceBB[us][ROOK] ^= SQ_BB(rookFrom) | SQ_BB(rookTo);
+            board[rookFrom] = NO_PIECE;
+            board[rookTo] = makePiece(us, ROOK);
+            occupiedByColor[us] ^= SQ_BB(rookFrom) | SQ_BB(rookTo);
+            occupiedAll = occupiedByColor[WHITE] | occupiedByColor[BLACK];
+            break;
+        }
+        case PROMOTION_QUEEN: case PROMOTION_QUEEN_CAPTURE: {
+            PieceType promotedType = QUEEN;
+            pieceBB[us][promotedType] ^= SQ_BB(to);
+            pieceBB[us][PAWN] ^= SQ_BB(from);
+            board[from] = makePiece(us, PAWN);
+            break;
+        }
+        case PROMOTION_ROOK: case PROMOTION_ROOK_CAPTURE: {
+            PieceType promotedType = ROOK;
+            pieceBB[us][promotedType] ^= SQ_BB(to);
+            pieceBB[us][PAWN] ^= SQ_BB(from);
+            board[from] = makePiece(us, PAWN);
+            break;
+        }
+        case PROMOTION_BISHOP: case PROMOTION_BISHOP_CAPTURE: {
+            PieceType promotedType = BISHOP;
+            pieceBB[us][promotedType] ^= SQ_BB(to);
+            pieceBB[us][PAWN] ^= SQ_BB(from);
+            board[from] = makePiece(us, PAWN);
+            break;
+        }
+        case PROMOTION_KNIGHT: case PROMOTION_KNIGHT_CAPTURE: {
+            PieceType promotedType = KNIGHT;
+            pieceBB[us][promotedType] ^= SQ_BB(to);
+            pieceBB[us][PAWN] ^= SQ_BB(from);
+            board[from] = makePiece(us, PAWN);
+            break;
+        }
+        default: break;
+    }
+
+
 }
+
+bool Board::isSquareAttacked(int square, Color bySide){
+    Color opp = opposite(bySide);
+    if(pawnAttacks[opp][square] & pieceBB[bySide][PAWN]) return true;
+    if(knightAttacks[square] & pieceBB[bySide][KNIGHT]) return true;
+    if(kingAttacks[square] & pieceBB[bySide][KING]) return true;
+    if(bishopAttacksSlow(square, occupiedAll) & (pieceBB[bySide][BISHOP] | pieceBB[bySide][QUEEN])) return true;
+    if(rookAttacksSlow(square, occupiedAll) & (pieceBB[bySide][ROOK] | pieceBB[bySide][QUEEN])) return true;
+    return false;
+}
+
 
 // --- HELPER FUNCTIONS ---
 void Board::printBoard(){

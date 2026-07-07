@@ -56,6 +56,8 @@ constexpr uint64_t FILE_H = 0x0808080808080808ULL;
 
 constexpr Piece makePiece(Color c, PieceType pt) {return static_cast<Piece>(c * 6 + pt);}
 constexpr PieceType pieceTypeOf(Piece p) {return static_cast<PieceType>(p % 6);}
+constexpr Color colorOfPiece(Piece p) {return static_cast<Color>((p < 6) ? WHITE : BLACK);}
+constexpr Color opposite(Color c) {return (c == WHITE) ? BLACK : WHITE;}
 
 // bit corrispondente a una casa
 constexpr uint64_t SQ_BB(int sq) { return 1ULL << sq; }

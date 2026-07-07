@@ -55,6 +55,8 @@ public:
     void makeMove(Move m, UndoInfo &undo);
     void unmakeMove(Move m, const UndoInfo &undo);
     
+    bool isSquareAttacked(int square, Color bySide);    // restituisce se square è attaccato dal colore bySide
+
     // --- HELPER FUNCTIONS ---
     void printBoard();
     void printBoardFromBB(uint64_t bb);

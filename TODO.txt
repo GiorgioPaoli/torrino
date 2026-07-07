@@ -27,35 +27,6 @@ UTILITY:
 
 ------------------------------------------------------------------------
 
---- FATTO ---
-Lista ordinata: cosa fare, in che file
-1. types.h (enum e costanti pure, zero logica)
-
-enum Color, enum PieceType, enum Piece, enum Square (A1..H8)
-FILE_A..H, RANK_1..8
-SQ_BB(sq), makePiece(color, pt)
-fileOf(sq), rankOf(sq) (utili più avanti per mosse/pedoni)
-
---- FATTO ---
-2. bitboard.h + bitboard.cpp (utility su bitboard, nessuno stato)
-
-popcount(), lsbIndex(), popLsb()
-printBB()
-shiftNorth/South/East/West() (con maschere anti-wraparound)
-
---- FATTO ---
-3. attacks.h + attacks.cpp (tabelle pre-calcolate, riempite una volta all'avvio)
-
-uint64_t knightAttacks[64], kingAttacks[64], pawnAttacks[COLOR_NB][64]
-void initKnightAttacks(), initKingAttacks(), initPawnAttacks() — le chiami tutte una volta sola all'avvio del programma (es. in main())
-Più avanti: funzioni scorrimento ingenuo per torre/alfiere (rookAttacksSlow(sq, occupancy), bishopAttacksSlow(sq, occupancy)) — poi sostituite dai magic bitboards
-
-4. move.h (rappresentazione mossa, solo dati)
-
-using Move = uint16_t;
-makeMove(from, to, flags), moveFrom(), moveTo(), moveFlags()
-struct MoveList { Move moves[256]; int count; void add(Move); }
-
 5. board.h + board.cpp (quello che hai già, da espandere)
 
 Quello che hai: initBoard(), updateOccupancy(), syncMailboxFromBitboards(), printBoard()
