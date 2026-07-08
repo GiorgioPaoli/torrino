@@ -7,6 +7,7 @@
 #include "attacks.h"
 #include "perft.h"
 #include "gameloop.h"
+#include "uci.h"
 
 
 int main(){
@@ -18,7 +19,8 @@ int main(){
     // board.loadFEN(fen);
     int depth = 4;
 
-    gameloop(depth);
+    // gameloop(depth);
+    uciLoop();
 
     // board.updateOccupancy();
     // board.syncMailboxFromBitboards();
