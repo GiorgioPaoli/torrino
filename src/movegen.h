@@ -1,3 +1,5 @@
+#pragma once
+
 #include "board.h"
 #include "move.h"
 
@@ -9,6 +11,8 @@
 
     Filtro legalità, per ogni mossa pseudo-legale: makeMove, isSquareAttacked(casa proprio re, colore avversario),
     se sotto scacco -> scarto la mossa
+
+    moveToString per notazione e2e4 ...
 
     RandomMove generation
 
@@ -25,3 +29,6 @@ void generateKingMoves(Board &board, MoveList &list, Color us);
 
 void generatePseudoLegalMoves(Board &board, MoveList &list);
 void generateLegalMoves(Board &board, MoveList &list);
+
+std::string moveToString(Move m);
+Move parseMove(Board &board, const std::string &s);

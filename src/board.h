@@ -56,6 +56,7 @@ public:
     void unmakeMove(Move m, const UndoInfo &undo);
     
     bool isSquareAttacked(int square, Color bySide);    // restituisce se square è attaccato dal colore bySide
+    bool isInCheck(Color us);                           // restituisce true se il re di colore us è sotto scacco
 
     // --- HELPER FUNCTIONS ---
     void printBoard();

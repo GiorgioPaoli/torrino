@@ -13,7 +13,7 @@ constexpr int popcount(uint64_t bb){
     return __builtin_popcountll(bb);
 }
 
-// returna il bit meno significativo (quello piu a destra)
+// returna l'indice del bit meno significativo (quello piu a destra)
 constexpr int getLsbIndex(uint64_t bb){
     return __builtin_ctzll(bb);
 }

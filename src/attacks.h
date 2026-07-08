@@ -15,6 +15,10 @@ extern uint64_t kingAttacks[64];
 // Sliding Pieces
 // --- DA FARE: MAGIC BITBOARDS ---
 
+/*
+    VENGONO CALCOLATE QUNADO SERVE, NON VENGONO INIZIALIZZATE PER ORA 
+*/
+
 // Questa è la versione ingenua
 extern uint64_t bishopAttacks[64];
 extern uint64_t rookAttacks[64];

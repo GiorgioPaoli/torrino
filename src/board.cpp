@@ -2,6 +2,7 @@
 #include "board.h"
 #include "attacks.h"
 
+// chiama dentro di se updateOccupancy e syncMailboxFromBitboards
 void Board::initBoard(){
     // azzero tutto 
     for (int c = 0; c < COLOR_NB; c++){
@@ -256,6 +257,7 @@ void Board::unmakeMove(Move m, const UndoInfo &undo){
     castlingRights = undo.castlingRights;
     enPassantSquare = undo.enPassantSquare;
     halfMoveClock = undo.halfMoveClock;
+    sideToMove = us;
 
     // aggiorna la loro BB
     uint64_t fromTo = SQ_BB(from) | SQ_BB(to);
@@ -306,8 +308,8 @@ void Board::unmakeMove(Move m, const UndoInfo &undo){
             int rookFrom = (us == WHITE) ? A1 : A8;
             int rookTo = (us == WHITE) ? D1 : D8;
             pieceBB[us][ROOK] ^= SQ_BB(rookFrom) | SQ_BB(rookTo);
-            board[rookFrom] = NO_PIECE;
-            board[rookTo] = makePiece(us, ROOK);
+            board[rookTo] = NO_PIECE;
+            board[rookFrom] = makePiece(us, ROOK);
             occupiedByColor[us] ^= SQ_BB(rookFrom) | SQ_BB(rookTo);
             occupiedAll = occupiedByColor[WHITE] | occupiedByColor[BLACK];
             break;
@@ -356,6 +358,10 @@ bool Board::isSquareAttacked(int square, Color bySide){
     return false;
 }
 
+bool Board::isInCheck(Color us){
+    int kingSq = getLsbIndex(pieceBB[us][KING]);
+    return isSquareAttacked(kingSq, opposite(us));
+}
 
 // --- HELPER FUNCTIONS ---
 void Board::printBoard(){
@@ -363,14 +369,17 @@ void Board::printBoard(){
     
     std::cout << '\n';
     for (int rank = 7; rank >= 0; rank--) {
-        std::cout << (rank + 1) << "  ";
+        std::cout << "  +---+---+---+---+---+---+---+---+\n";
+        std::cout << (rank + 1) << " ";
         for (int file = 0; file < 8; file++) {
             int sq = rank * 8 + file;
-            std::cout << pieceChars[board[sq]] << ' ';
+            char c = ((board[sq] == NO_PIECE) ? ' ' : pieceChars[board[sq]]);
+            std::cout << "| " << c << " ";
         }
-        std::cout << '\n';
+        std::cout << "|\n";
     }
-    std::cout << "\n   a b c d e f g h\n";
+    std::cout << "  +---+---+---+---+---+---+---+---+\n";
+    std::cout << "    a   b   c   d   e   f   g   h\n\n";
 
 }
 
@@ -450,6 +459,8 @@ void Board::loadFEN(const std::string &fen){
     }
 
     halfMoveClock = halfmove;
+
+    updateOccupancy();
 }
 
 
