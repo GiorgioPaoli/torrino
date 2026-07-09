@@ -57,9 +57,15 @@ void uciLoop(){
         else if (token == "go"){
             // BISOGNA AGGIUNGERE TUTTI GLI ALTRI PARAMETRI
             // wtime, btime, movetime ecc -> Non posso finche non ho iterativeDeepening
+            int depth = 4;
+            std::string param;
+            while (iss >> param) {
+                if (param == "depth") {
+                    iss >> depth;
+                }
+            }
             
-            
-            Move best = findBestMove(board, 4);   // profondità fissa per ora, ignori i parametri di tempo
+            Move best = findBestMove(board, depth);   // profondità fissa per ora, ignori i parametri di tempo
             std::cout << "bestmove " << moveToString(best) << std::endl;        
         }
         else if (token == "quit"){
