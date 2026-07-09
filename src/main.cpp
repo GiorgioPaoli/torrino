@@ -13,13 +13,14 @@
 int main(){
     Board board;
 
-    // std::string fen = "r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1";
+    // std::string fen = "6k1/8/5R1K/8/8/8/8/8 w - - 0 1";
     // board.initBoard();
     // board.clearBoard();
     // board.loadFEN(fen);
     int depth = 4;
 
     // gameloop(depth);
+    
     uciLoop();
 
     // board.updateOccupancy();
@@ -33,6 +34,8 @@ int main(){
 
 
     // initPawnAttacks(); initKnightAttacks(); initKingAttacks();
+    // board.printBoard();
+    // std::cout << "\nEvaluation: " << negamax(board, 3);
 
     // auto start = std::chrono::steady_clock::now();
 
