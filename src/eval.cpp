@@ -1,6 +1,21 @@
 #include "eval.h"
 #include "bitboard.h"
 
+// restituisce una penalita per ogni doubled pawn
+int doublePawnPenalty(Board &board){
+    int whitePenalty = 0;
+    int blackPenalty = 0;
+
+    for (int f = 0; f < 8; f++) {
+        int whiteOnFile = popcount(board.pieceBB[WHITE][PAWN] & FILE_MASKS[f]);
+        int blackOnFile = popcount(board.pieceBB[BLACK][PAWN] & FILE_MASKS[f]);
+
+        if (whiteOnFile > 1) whitePenalty += (whiteOnFile - 1) * DOUBLED_PAWN_PENALY;
+        if (blackOnFile > 1) blackPenalty += (blackOnFile - 1) * DOUBLED_PAWN_PENALY;
+    }
+
+    return blackPenalty - whitePenalty;
+}
 
 int evaluate(Board &board) {
     int score = 0;
@@ -17,5 +32,7 @@ int evaluate(Board &board) {
         }
     }
     
+    score += doublePawnPenalty(board);
+
     return (board.sideToMove == WHITE) ? score : -score;
 }   

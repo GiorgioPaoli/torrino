@@ -1,7 +1,7 @@
 #include "movegen.h"
 #include "attacks.h"
 
-
+// ORDINE IMPORTANTE !!!! Aggiunge prima la promozione di regina
 void generatePawnMoves(Board &board, MoveList &list, Color us){
     // deve gestire EnPassant e Promozioni
     Color them = opposite(us);
@@ -16,10 +16,10 @@ void generatePawnMoves(Board &board, MoveList &list, Color us){
         int to = from + pushDir;
         if (!getBit(board.occupiedAll, to)) {
             if (rankOf(to) == promotionRank) {
+                list.add({from, to, PROMOTION_QUEEN});
+                list.add({from, to, PROMOTION_ROOK});
                 list.add({from, to, PROMOTION_KNIGHT});
                 list.add({from, to, PROMOTION_BISHOP});
-                list.add({from, to, PROMOTION_ROOK});
-                list.add({from, to, PROMOTION_QUEEN});
             } else {
                 list.add({from, to, QUIET});
             }
@@ -36,10 +36,10 @@ void generatePawnMoves(Board &board, MoveList &list, Color us){
         while (captures) {
             int to = popLsb(captures);
             if (rankOf(to) == promotionRank) {
-                list.add({from, to, PROMOTION_KNIGHT_CAPTURE});
-                list.add({from, to, PROMOTION_BISHOP_CAPTURE});
-                list.add({from, to, PROMOTION_ROOK_CAPTURE});
                 list.add({from, to, PROMOTION_QUEEN_CAPTURE});
+                list.add({from, to, PROMOTION_ROOK_CAPTURE});
+                list.add({from, to, PROMOTION_BISHOP_CAPTURE});
+                list.add({from, to, PROMOTION_KNIGHT_CAPTURE});
             } else {
                 list.add({from, to, CAPTURE});
             }
@@ -247,6 +247,48 @@ void generateLegalMoves(Board &board, MoveList &list){
         board.unmakeMove(pseudo.moves[i], undo);
     }
 }
+
+// MOVE ORDERING E SCORE MOVE
+// da uno score alla mossa per il move-ordering
+int scoreMove(Board &board, Move m){
+    // catture: MVV-LVA (vittima grossa, attaccante piccolo)
+    if (isCapture((Flags)m.flags)) {
+        int attacker = PIECE_WEIGHTS[pieceTypeOf(board.board[m.fromSquare])];
+        int victim;
+        if (m.flags == EN_PASSANT) {
+            victim = PIECE_WEIGHTS[PAWN];
+        } else {
+            victim = PIECE_WEIGHTS[pieceTypeOf(board.board[m.toSquare])];
+        }
+
+        return 10000 + victim * 10 - attacker;
+    }
+
+    if (m.flags == PROMOTION_QUEEN) {
+        return 9000;
+    }    
+
+    return 0;
+}
+
+// ordina le mosse con selection sort
+void orderMoves(Board &board, MoveList &list){
+    for (int i = 0; i < list.count; i++) {
+        int best = i;
+        for (int j = i + 1; j < list.count; j++) {
+            if (scoreMove(board, list.moves[j]) > scoreMove(board, list.moves[best])) {
+                best = j;
+            }
+        }
+
+        Move tmp = list.moves[i];
+        list.moves[i] = list.moves[best];
+        list.moves[best] = tmp;
+    }
+}
+
+
+
 
 std::string moveToString(Move m){
     std::string s;

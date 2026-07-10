@@ -7,6 +7,8 @@
 void gameloop(int depth){
     Board board;
     board.initBoard();
+    board.updateOccupancy();
+    board.syncMailboxFromBitboards();
     initPawnAttacks(); initKnightAttacks(); initKingAttacks();
 
     while (true) {

@@ -363,6 +363,8 @@ bool Board::isInCheck(Color us){
     return isSquareAttacked(kingSq, opposite(us));
 }
 
+
+
 // --- HELPER FUNCTIONS ---
 void Board::printBoard(){
     const char* pieceChars = "PNBRQKpnbrqk.";  // maiuscolo bianco, minuscolo nero, '.' vuoto

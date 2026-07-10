@@ -18,6 +18,7 @@ constexpr int PIECE_WEIGHTS[PIECE_TYPE_NB] = {
     - in futuro bisognera utilizzare quelle con valori tuned, con valori Mid Game e End Game
 */  
 
+constexpr int DOUBLED_PAWN_PENALY = 15;
 
 // sprona il pedone ad andare al centro e avanti per promuovere
 // mantiene valori positivi davanti agli arrocchi per proteggere il re 
@@ -74,7 +75,7 @@ constexpr int QUEEN_PST[64] = {
     -10,  0,  0,  0,  0,  0,  0,-10,
     -10,  0,  5,  5,  5,  5,  0,-10,
      -5,  0,  5,  5,  5,  5,  0, -5,
-     0,  0,  5,  5,  5,  5,  0, -5,
+      0,  0,  5,  5,  5,  5,  0, -5,
      -10,  5,  5,  5,  5,  5,  0,-10,
      -10,  0,  5,  0,  0,  0,  0,-10,
      -20,-10,-10, -5, -5,-10,-10,-20
@@ -108,4 +109,5 @@ constexpr const int *PST[PIECE_TYPE_NB] = {
     PAWN_PST, KNIGHT_PST, BISHOP_PST, ROOK_PST, QUEEN_PST, MG_KING_PST
 };
 
+int doublePawnPenalty(Board &board);
 int evaluate(Board &board);

@@ -13,29 +13,22 @@
 int main(){
     Board board;
 
-    // std::string fen = "6k1/8/5R1K/8/8/8/8/8 w - - 0 1";
+    // std::string fen = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1";
     // board.initBoard();
     // board.clearBoard();
     // board.loadFEN(fen);
-    int depth = 4;
+    
+    // board.printBoard();
+    
+    // int depth = 5;
+
+    // Move best = findBestMove(board, depth);
+    // std::cout << "migliore: " << moveToString(best) << "\n";
+    // std::cout << doublePawnPenalty(board);
 
     // gameloop(depth);
     
     uciLoop();
-
-    // board.updateOccupancy();
-    // board.syncMailboxFromBitboards();
-
-    // std::cout << '\n' << fen << std::endl;
-    // board.printBoard();
-    // std::cout << '\n';
-    // board.printBoardFromBB(board.occupiedByColor[WHITE]);
-    // board.printBoardFromBB(board.occupiedByColor[BLACK]);
-
-
-    // initPawnAttacks(); initKnightAttacks(); initKingAttacks();
-    // board.printBoard();
-    // std::cout << "\nEvaluation: " << negamax(board, 3);
 
     // auto start = std::chrono::steady_clock::now();
 

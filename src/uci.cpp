@@ -66,7 +66,17 @@ void uciLoop(){
             }
             
             Move best = findBestMove(board, depth);   // profondità fissa per ora, ignori i parametri di tempo
-            std::cout << "bestmove " << moveToString(best) << std::endl;        
+            Move endMove {-1, -1, QUIET};
+            // se il motore non trova una mossa, per patta, stallo o scacco matto, lo fa sapere al protocollo UCI 
+            if (best.fromSquare == endMove.fromSquare &&
+                best.toSquare   == endMove.toSquare   &&
+                best.flags      == endMove.flags) {
+                    std::cout << "bestmove 0000" << std::endl; 
+            } 
+            // altrimenti restituisce la miglior mossa
+            else {
+                std::cout << "bestmove " << moveToString(best) << std::endl;        
+            }
         }
         else if (token == "quit"){
             break;

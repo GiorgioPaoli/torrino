@@ -57,6 +57,8 @@ public:
     
     bool isSquareAttacked(int square, Color bySide);    // restituisce se square è attaccato dal colore bySide
     bool isInCheck(Color us);                           // restituisce true se il re di colore us è sotto scacco
+    bool isCheckmate(Color us);                         // restituisce true se il re di colore us è sotto scacco matto
+    bool isStalemate(Color us);                         // restituisce true se il re di colore us non ha mossa disponibili e non è scacco
 
     // --- HELPER FUNCTIONS ---
     void printBoard();

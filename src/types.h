@@ -51,6 +51,9 @@ constexpr uint64_t FILE_F = 0x2020202020202020ULL;
 constexpr uint64_t FILE_G = 0x4040404040404040ULL;
 constexpr uint64_t FILE_H = 0x8080808080808080ULL;
 
+constexpr uint64_t FILE_MASKS[8] = {
+    FILE_A, FILE_B, FILE_C, FILE_D, FILE_E, FILE_F, FILE_G, FILE_H
+};
 
 // --- FUNZIONI UTILI ---
 
