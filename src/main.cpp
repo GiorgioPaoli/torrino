@@ -29,7 +29,7 @@ int main(){
     // gameloop(depth);
     
     uciLoop();
-
+    
     // auto start = std::chrono::steady_clock::now();
 
     // uint64_t nodes = perft(board, depth);

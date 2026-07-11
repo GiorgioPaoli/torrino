@@ -15,6 +15,12 @@ void generatePawnMoves(Board &board, MoveList &list, Color us){
         int from = popLsb(pawns);
         int to = from + pushDir;
         if (!getBit(board.occupiedAll, to)) {
+            if (rankOf(from) == startRank) {
+                int to2 = from + 2*pushDir;
+                if(!getBit(board.occupiedAll, to2)) {
+                    list.add({from, to2, DOUBLE_PAWN_PUSH});
+                }
+            }
             if (rankOf(to) == promotionRank) {
                 list.add({from, to, PROMOTION_QUEEN});
                 list.add({from, to, PROMOTION_ROOK});
@@ -24,12 +30,6 @@ void generatePawnMoves(Board &board, MoveList &list, Color us){
                 list.add({from, to, QUIET});
             }
 
-            if (rankOf(from) == startRank) {
-                int to2 = from + 2*pushDir;
-                if(!getBit(board.occupiedAll, to2)) {
-                    list.add({from, to2, DOUBLE_PAWN_PUSH});
-                }
-            }
         }
         // per catture
         uint64_t captures = pawnAttacks[us][from] & board.occupiedByColor[them];
@@ -273,10 +273,15 @@ int scoreMove(Board &board, Move m){
 
 // ordina le mosse con selection sort
 void orderMoves(Board &board, MoveList &list){
+    int scores[256];
+    for (int i = 0; i < list.count; i++) {
+        scores[i] = scoreMove(board, list.moves[i]);
+    }
+    
     for (int i = 0; i < list.count; i++) {
         int best = i;
         for (int j = i + 1; j < list.count; j++) {
-            if (scoreMove(board, list.moves[j]) > scoreMove(board, list.moves[best])) {
+            if (scores[j] > scores[best]) {
                 best = j;
             }
         }
@@ -284,6 +289,9 @@ void orderMoves(Board &board, MoveList &list){
         Move tmp = list.moves[i];
         list.moves[i] = list.moves[best];
         list.moves[best] = tmp;
+        int tmpScore = scores[i];
+        scores[i] = scores[best];
+        scores[best] = tmpScore;
     }
 }
 

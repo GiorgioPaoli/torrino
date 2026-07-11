@@ -1,11 +1,15 @@
 #pragma once
 
+#include <chrono>
 #include "eval.h"
 
 #define INF      1000000 // 1 mln
 #define MATE     -100000 // 100k
 
 extern long long nodesCount; 
+
+extern bool stopSearch;
+extern std::chrono::steady_clock::time_point deadline; 
 
 /*
     Utilizza Negamax, variante di minimax, non controlla di chi è il turno
@@ -26,7 +30,8 @@ extern long long nodesCount;
 */
 int negamax(Board &board, int depth, int alpha, int beta);
 
-Move findBestMove(Board &board, int depth);
+Move findBestMove(Board &board, int depth, Move prevMove);
+Move findBestMoveTime(Board &board, int timeForMove);
 
 constexpr int max(int a, int b) {return (a >= b) ? a : b;}
 constexpr int min(int a, int b) {return (a <= b) ? a : b;}

@@ -7,6 +7,7 @@
 #include "attacks.h"
 #include "uci.h"
 
+
 void uciLoop(){
     Board board;
     board.initBoard();
@@ -60,18 +61,44 @@ void uciLoop(){
             }
         }
         else if (token == "go"){
-            // BISOGNA AGGIUNGERE TUTTI GLI ALTRI PARAMETRI
-            // wtime, btime, movetime ecc -> Non posso finche non ho iterativeDeepening
-            int depth = 4;
+            int depth = -1;             // -1 NON specificata
+            int wtime = 0, btime = 0, winc = 0, binc = 0, moveTime = 0;
+
             std::string param;
             while (iss >> param) {
-                if (param == "depth") {
-                    iss >> depth;
-                }
+                if      (param == "depth")    iss >> depth;
+                else if (param == "wtime")    iss >> wtime;      // tempo rimasto al bianco (ms)
+                else if (param == "btime")    iss >> btime;      // tempo rimasto al nero (ms)
+                else if (param == "winc")     iss >> winc;       // incremento bianco (ms)
+                else if (param == "binc")     iss >> binc;       // incremento nero (ms)
+                else if (param == "movetime") iss >> moveTime;   // tempo fisso per QUESTA mossa
             }
-            
-            Move best = findBestMove(board, depth);   // profondità fissa per ora, ignori i parametri di tempo
+
+            // calcolo del budget di tempo per questa mossa
+            int timeForMove;
+            if (moveTime > 0) {
+                timeForMove = moveTime;                          // se imposto, lo uso diretto
+            } else {
+                int timeLeft = (board.sideToMove == WHITE) ? wtime : btime;
+                int inc      = (board.sideToMove == WHITE) ? winc  : binc;
+                timeForMove  = timeLeft / 30 + inc / 2;          // stima semplice
+                if (timeForMove > timeLeft - 50) timeForMove = timeLeft - 50;  // rete di sicurezza
+                if (timeForMove < 1) timeForMove = 1;
+            }
+
+            // scelta della ricerca: profondita fissa (per i test) oppure a tempo
+            Move best;
+            if (depth > 0) {
+                stopSearch = false;
+                deadline = std::chrono::steady_clock::now() + std::chrono::hours(24);
+                best = findBestMove(board, depth, Move{-1, -1, QUIET});        // test: go depth N
+            } else {
+                best = findBestMoveTime(board, timeForMove);
+            }
+
             Move endMove {-1, -1, QUIET};
+
+
             // se il motore non trova una mossa, per patta, stallo o scacco matto, lo fa sapere al protocollo UCI 
             if (best.fromSquare == endMove.fromSquare &&
                 best.toSquare   == endMove.toSquare   &&

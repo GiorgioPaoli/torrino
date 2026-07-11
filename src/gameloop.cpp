@@ -37,7 +37,7 @@ void gameloop(int depth){
                 board.makeMove(move, undo);
             }
         } else {
-            Move move = findBestMove(board, depth);
+            Move move = findBestMove(board, depth, Move{-1, -1, QUIET});
             std::cout << "Il motore gioca: " << moveToString(move) << "\n";
             board.makeMove(move, undo);
         }
