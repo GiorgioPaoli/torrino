@@ -49,6 +49,11 @@ void uciLoop(){
                 std::string mv;
                 while (iss >> mv){                // ogni parola rimanente è una mossa
                     Move m = parseMove(board, mv);
+                    if (m.fromSquare == -1) {
+                        std::cout << "info string parseMove FALLITO su '" << mv << "'" << std::endl;
+                        // qui NON chiamare makeMove
+                        continue;   // o break
+                    }
                     UndoInfo undo;
                     board.makeMove(m, undo);
                 }
