@@ -2,7 +2,6 @@
 
 #include "board.h"
 
-
 constexpr int PIECE_WEIGHTS[PIECE_TYPE_NB] = {
     100,    // PAWN
     320,    // KNIGHT

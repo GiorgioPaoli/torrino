@@ -39,7 +39,7 @@ void Board::initBoard(){
     syncMailboxFromBitboards();
 
     sideToMove = WHITE;
-    // enPassant
+    enPassantSquare = -1;
     castlingRights = 0b1111;
     halfMoveClock = 0;
 }

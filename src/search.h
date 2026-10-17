@@ -8,6 +8,8 @@
 
 extern long long nodesCount; 
 
+extern int movesPlayed;
+
 extern bool stopSearch;
 extern std::chrono::steady_clock::time_point deadline; 
 
@@ -32,6 +34,8 @@ int negamax(Board &board, int depth, int alpha, int beta);
 
 Move findBestMove(Board &board, int depth, Move prevMove);
 Move findBestMoveTime(Board &board, int timeForMove);
+
+int quiescence(Board &board, int alpha, int beta);
 
 constexpr int max(int a, int b) {return (a >= b) ? a : b;}
 constexpr int min(int a, int b) {return (a <= b) ? a : b;}

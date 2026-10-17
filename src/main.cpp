@@ -20,7 +20,17 @@ int main(){
     
     // board.printBoard();
     
-    // int depth = 5;
+    // std::cout << "eval: " << evaluate(board) << "\n";
+
+    
+    // std::string fen = "rnbqkbnr/pppppppp/8/8/8/2Q5/PPPPPPPP/RNB1KBNR b KQkq - 0 1";
+    // board.loadFEN(fen);
+    // board.printBoard();
+    // std::cout << "evaluation: " << evaluate(board) << '\n';
+    
+    // perftDivide(board, 1);
+
+    // int depth = 10;
 
     // Move best = findBestMove(board, depth);
     // std::cout << "migliore: " << moveToString(best) << "\n";

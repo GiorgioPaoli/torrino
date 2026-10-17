@@ -6,8 +6,54 @@ using namespace std::chrono;
 
 long long nodesCount = 0;
 
+int movesPlayed = 0;        // è il numero di mosse giocate SOLO dal bot, per evaluation e per midgame e endgame
+
 bool stopSearch = false;
 steady_clock::time_point deadline; 
+
+
+int quiescence(Board &board, int alpha, int beta){
+    nodesCount++;
+    // questi due sono stop per il time management
+    if ((nodesCount & 2047) == 0) {
+        if (steady_clock::now() > deadline) stopSearch = true;
+    }
+    if (stopSearch) return 0;
+
+    int standPat = evaluate(board);
+    if (standPat >= beta) return standPat;
+    if (standPat > alpha) alpha = standPat;
+
+    int bestScore = standPat;
+    Color us = board.sideToMove;
+
+    MoveList list;
+    generatePseudoLegalMoves(board, list);
+    orderMoves(board, list);
+
+    for (int i = 0; i < list.count; i++){
+        int flag = list.moves[i].flags;
+        if (flag == CAPTURE || flag == PROMOTION_QUEEN || flag == PROMOTION_QUEEN_CAPTURE || flag == EN_PASSANT) {
+
+            UndoInfo undo;
+            board.makeMove(list.moves[i], undo);
+
+            if (board.isInCheck(us)) {
+                board.unmakeMove(list.moves[i], undo);
+                continue;
+            }
+            
+            int score = -quiescence(board, -beta, -alpha);
+            board.unmakeMove(list.moves[i], undo);
+            
+            if (score > bestScore) bestScore = score;
+            if (bestScore > alpha) alpha = bestScore;
+            if (alpha >= beta) break;
+        } 
+    }
+
+    return bestScore;
+}
 
 
 int negamax(Board &board, int depth, int alpha, int beta){
@@ -19,7 +65,7 @@ int negamax(Board &board, int depth, int alpha, int beta){
     if (stopSearch) return 0;
     
     if (depth == 0) {
-        return evaluate(board);
+        return quiescence(board, alpha, beta);
     }
 
     Color us = board.sideToMove;
@@ -71,7 +117,6 @@ Move findBestMove(Board &board, int depth, Move prevMove){
     // nodesCount = 0;
     // auto start = std::chrono::steady_clock::now();
     
-
     MoveList list;
     generateLegalMoves(board, list);
     if (list.count == 0) {
@@ -117,7 +162,6 @@ Move findBestMove(Board &board, int depth, Move prevMove){
     // std::cout << "info string nodi " << nodesCount
     //           << "  tempo: " << ms << " ms"
     //           << "  NPS: " << (ms > 0 ? nodesCount * 1000 / ms : 0) << "\n";
-
 
     return bestMove;
 }
