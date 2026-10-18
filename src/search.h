@@ -8,6 +8,7 @@
 
 extern long long nodesCount; 
 extern int rootScore;
+constexpr int MAX_PLY = 64;
 
 extern int movesPlayed;
 
@@ -31,7 +32,7 @@ extern std::chrono::steady_clock::time_point deadline;
     Restituisce il punteggio di quella mossa a profondita depth
     Implementa alpha beta pruning e move orderibng
 */
-int negamax(Board &board, int depth, int alpha, int beta);
+int negamax(Board &board, int depth, int alpha, int beta, int ply);
 
 Move findBestMove(Board &board, int depth, Move prevMove);
 Move findBestMoveTime(Board &board, int timeForMove, int maxDepth);

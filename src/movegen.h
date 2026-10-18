@@ -31,10 +31,9 @@ void generateKingMoves(Board &board, MoveList &list, Color us);
 void generatePseudoLegalMoves(Board &board, MoveList &list);
 void generateLegalMoves(Board &board, MoveList &list);
 
-// da aggiungere Killer Moves
 // ordina le mosse in modo da guardare prima le mosse promettenti in negamax e potare piu rami 
-void orderMoves(Board &board, MoveList &list);
-int scoreMove(Board &board, Move m);
+void orderMoves(Board &board, MoveList &list, Move killer1, Move killer2);
+int scoreMove(Board &board, Move m, Move killer1, Move killer2);
 
 
 std::string moveToString(Move m);

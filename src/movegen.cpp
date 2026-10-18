@@ -250,7 +250,7 @@ void generateLegalMoves(Board &board, MoveList &list){
 
 // MOVE ORDERING E SCORE MOVE
 // da uno score alla mossa per il move-ordering
-int scoreMove(Board &board, Move m){
+int scoreMove(Board &board, Move m, Move killer1, Move killer2){
     // catture: MVV-LVA (vittima grossa, attaccante piccolo)
     if (isCapture((Flags)m.flags)) {
         int attacker = PIECE_WEIGHTS[pieceTypeOf(board.board[m.fromSquare])];
@@ -268,14 +268,22 @@ int scoreMove(Board &board, Move m){
         return 9000;
     }    
 
+    if (isSameMove(m, killer1)) {
+        return 8000;
+    }
+
+    if (isSameMove(m, killer2)) {
+        return 7000;
+    }
+
     return 0;
 }
 
 // ordina le mosse con selection sort
-void orderMoves(Board &board, MoveList &list){
+void orderMoves(Board &board, MoveList &list, Move killer1, Move killer2){
     int scores[256];
     for (int i = 0; i < list.count; i++) {
-        scores[i] = scoreMove(board, list.moves[i]);
+        scores[i] = scoreMove(board, list.moves[i], killer1, killer2);
     }
     
     for (int i = 0; i < list.count; i++) {

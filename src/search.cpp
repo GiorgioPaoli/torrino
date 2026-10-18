@@ -6,6 +6,8 @@ using namespace std::chrono;
 
 long long nodesCount = 0;
 int rootScore = 0;
+// MAX_PLY = 64
+Move killers[MAX_PLY][2];
 
 int movesPlayed = 0;        // è il numero di mosse giocate SOLO dal bot, per evaluation e per midgame e endgame
 
@@ -30,7 +32,7 @@ int quiescence(Board &board, int alpha, int beta){
 
     MoveList list;
     generatePseudoLegalMoves(board, list);
-    orderMoves(board, list);
+    orderMoves(board, list, {-1, -1, QUIET}, {-1, -1, QUIET});
 
     for (int i = 0; i < list.count; i++){
         int flag = list.moves[i].flags;
@@ -57,7 +59,7 @@ int quiescence(Board &board, int alpha, int beta){
 }
 
 
-int negamax(Board &board, int depth, int alpha, int beta){
+int negamax(Board &board, int depth, int alpha, int beta, int ply){
     nodesCount++;
     // questi due sono stop per il time management
     if ((nodesCount & 2047) == 0) {
@@ -80,7 +82,7 @@ int negamax(Board &board, int depth, int alpha, int beta){
     generatePseudoLegalMoves(board, list);
 
     // ordina le mosse mettendo prima le catture e promozioni, rende piu efficiente alpha beta pruning
-    orderMoves(board, list);
+    orderMoves(board, list, killers[ply][0], killers[ply][1]);
 
     int bestScore = -INF;
     int legalMoves = 0;
@@ -95,12 +97,18 @@ int negamax(Board &board, int depth, int alpha, int beta){
         }
         
         legalMoves++;
-        int score = -negamax(board, depth - 1, -beta, -alpha);
+        int score = -negamax(board, depth - 1, -beta, -alpha, ply + 1);
         board.unmakeMove(list.moves[i], undo);
 
         if (score > bestScore) bestScore = score;
         if (bestScore > alpha) alpha = bestScore;
-        if (alpha >= beta) break; 
+        if (alpha >= beta) {
+            if (isQuiet((Flags)list.moves[i].flags) && !isSameMove(killers[ply][0], list.moves[i])) {
+                killers[ply][1] = killers[ply][0];
+                killers[ply][0] = list.moves[i];
+            }
+            break;
+        }
     }
 
     if (legalMoves == 0) {
@@ -146,7 +154,7 @@ Move findBestMove(Board &board, int depth, Move prevMove){
     for (int i = 0; i < list.count; i++){
         UndoInfo undo;
         board.makeMove(list.moves[i], undo);
-        int score = -negamax(board, depth - 1, -beta, -alpha);
+        int score = -negamax(board, depth - 1, -beta, -alpha, 1);
         board.unmakeMove(list.moves[i], undo);
 
         if (score > bestScore) {
@@ -174,6 +182,14 @@ Move findBestMoveTime(Board &board, int timeForMove, int maxDepth){
     deadline = start + milliseconds(timeForMove);
     stopSearch = false;
     nodesCount = 0;
+    Move nullMove {-1, -1, QUIET};
+    // resetta l'array di killer moves a ogni nuova mossa
+    for (int i = 0; i < MAX_PLY; i++) {
+        for (int j = 0; j < 2; j++) {
+            killers[i][j] = nullMove;
+        }
+    }
+
 
     Move bestMove {-1, -1, QUIET};
 

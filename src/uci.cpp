@@ -20,7 +20,7 @@ void uciLoop(){
         iss >> token;                     // prima parola = il comando
 
         if (token == "uci"){
-            std::cout << "id name Torrino\n";
+            std::cout << "id name Torrino v5\n";
             std::cout << "id author Giorgio\n";
             std::cout << "uciok" << std::endl;
         }

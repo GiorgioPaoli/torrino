@@ -49,3 +49,21 @@ constexpr bool isCapture(Flags flag){
         || flag == PROMOTION_BISHOP_CAPTURE
         || flag == PROMOTION_KNIGHT_CAPTURE;
 }
+
+constexpr bool isSameMove(Move move1, Move move2){
+    return move1.fromSquare == move2.fromSquare 
+        && move1.toSquare == move2.toSquare
+        && move1.flags == move2.flags; 
+}
+
+constexpr bool isQuiet(Flags flag){
+    return flag == QUIET
+        || flag == DOUBLE_PAWN_PUSH;
+}
+
+constexpr bool isPromotion(Flags flag){
+    return flag >= PROMOTION_QUEEN 
+        && flag <= PROMOTION_KNIGHT_CAPTURE;
+} 
+
+
