@@ -7,6 +7,7 @@
 #define MATE     -100000 // 100k
 
 extern long long nodesCount; 
+extern int rootScore;
 
 extern int movesPlayed;
 
@@ -33,7 +34,7 @@ extern std::chrono::steady_clock::time_point deadline;
 int negamax(Board &board, int depth, int alpha, int beta);
 
 Move findBestMove(Board &board, int depth, Move prevMove);
-Move findBestMoveTime(Board &board, int timeForMove);
+Move findBestMoveTime(Board &board, int timeForMove, int maxDepth);
 
 int quiescence(Board &board, int alpha, int beta);
 

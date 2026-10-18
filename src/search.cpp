@@ -5,6 +5,7 @@
 using namespace std::chrono;
 
 long long nodesCount = 0;
+int rootScore = 0;
 
 int movesPlayed = 0;        // è il numero di mosse giocate SOLO dal bot, per evaluation e per midgame e endgame
 
@@ -163,10 +164,12 @@ Move findBestMove(Board &board, int depth, Move prevMove){
     //           << "  tempo: " << ms << " ms"
     //           << "  NPS: " << (ms > 0 ? nodesCount * 1000 / ms : 0) << "\n";
 
+    rootScore = bestScore;
+
     return bestMove;
 }
 
-Move findBestMoveTime(Board &board, int timeForMove){
+Move findBestMoveTime(Board &board, int timeForMove, int maxDepth){
     auto start = steady_clock::now();
     deadline = start + milliseconds(timeForMove);
     stopSearch = false;
@@ -174,7 +177,7 @@ Move findBestMoveTime(Board &board, int timeForMove){
 
     Move bestMove {-1, -1, QUIET};
 
-    for (int depth = 1; depth < 64; depth++) {
+    for (int depth = 1; depth <= maxDepth; depth++) {
         Move move = findBestMove(board, depth, bestMove);
 
         if (stopSearch) break;
@@ -185,14 +188,15 @@ Move findBestMoveTime(Board &board, int timeForMove){
         auto elapsed = duration_cast<milliseconds>(steady_clock::now() - start).count();
         
         // DEBUG per nodi, mossa, tempo e profondita
-        // long long nps = (elapsed > 0) ? (nodesCount * 1000 / elapsed) : 0;
-        // std::cout   << "info string depth: " << depth
-        //             << ", nodi: " << nodesCount
-        //             << ", tempo: " << elapsed << "ms" 
-        //             << ", NPS: " << nps << "/s"
-        //             << ", best move: " << moveToString(bestMove) 
-        //             << std::endl; 
-        
+        long long nps = (elapsed > 0) ? (nodesCount * 1000 / elapsed) : 0;
+        std::cout   << "info " 
+                    << "depth " << depth
+                    << " score cp " << rootScore
+                    << " nodes " << nodesCount
+                    << " nps " << nps
+                    << " time " << elapsed
+                    << " pv " << moveToString(bestMove) 
+                    << std::endl;
 
         if (elapsed * 2 > timeForMove) break;
     }

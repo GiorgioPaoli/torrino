@@ -20,7 +20,7 @@ void uciLoop(){
         iss >> token;                     // prima parola = il comando
 
         if (token == "uci"){
-            std::cout << "id name IlMioMotore\n";
+            std::cout << "id name Torrino\n";
             std::cout << "id author Giorgio\n";
             std::cout << "uciok" << std::endl;
         }
@@ -89,11 +89,9 @@ void uciLoop(){
             // scelta della ricerca: profondita fissa (per i test) oppure a tempo
             Move best;
             if (depth > 0) {
-                stopSearch = false;
-                deadline = std::chrono::steady_clock::now() + std::chrono::hours(24);
-                best = findBestMove(board, depth, Move{-1, -1, QUIET});        // test: go depth N
+                best = findBestMoveTime(board, 86400000, depth);
             } else {
-                best = findBestMoveTime(board, timeForMove);
+                best = findBestMoveTime(board, timeForMove, 64);
             }
 
             Move endMove {-1, -1, QUIET};
