@@ -8,12 +8,17 @@
 #include "perft.h"
 #include "gameloop.h"
 #include "uci.h"
+#include "zobrist.h"
 
 
 int main(){
     Board board;
+    // initZobrist();
+    // initPawnAttacks();
+    // initKnightAttacks();
+    // initKingAttacks();
 
-    // std::string fen = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1";
+    // std::string fen = "r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - 0 10";
     // board.initBoard();
     // board.clearBoard();
     // board.loadFEN(fen);
@@ -28,7 +33,7 @@ int main(){
     // board.printBoard();
     // std::cout << "evaluation: " << evaluate(board) << '\n';
     
-    // perftDivide(board, 1);
+    // perftDivide(board, 4);
 
     // int depth = 10;
 

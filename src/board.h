@@ -40,6 +40,7 @@ public:
                                 // (black) long, short, (white) long, short
 
     int halfMoveClock;          // contantore per la regola delle 50 mosse
+    uint64_t hash;
 
 
     void initBoard();
@@ -55,6 +56,8 @@ public:
     void makeMove(Move m, UndoInfo &undo);
     void unmakeMove(Move m, const UndoInfo &undo);
     
+    uint64_t computeHash();
+
     bool isSquareAttacked(int square, Color bySide);    // restituisce se square è attaccato dal colore bySide
     bool isInCheck(Color us);                           // restituisce true se il re di colore us è sotto scacco
     bool isCheckmate(Color us);                         // restituisce true se il re di colore us è sotto scacco matto

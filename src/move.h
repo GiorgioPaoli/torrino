@@ -1,5 +1,6 @@
 #pragma once
 #include "types.h"
+#include <cstdint>
 
 enum Flags {
     QUIET, /*mossa semplice*/
@@ -39,6 +40,7 @@ struct UndoInfo {
     int castlingRights;
     int enPassantSquare;
     int halfMoveClock;
+    uint64_t hash;
 };
 
 constexpr bool isCapture(Flags flag){

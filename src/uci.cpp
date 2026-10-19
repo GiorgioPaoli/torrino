@@ -5,12 +5,14 @@
 #include "movegen.h"
 #include "search.h"
 #include "attacks.h"
+#include "zobrist.h"
 #include "uci.h"
 
 
 void uciLoop(){
     Board board;
     board.initBoard();
+    initZobrist();
     initPawnAttacks(); initKnightAttacks(); initKingAttacks();
 
     std::string line;
@@ -20,7 +22,7 @@ void uciLoop(){
         iss >> token;                     // prima parola = il comando
 
         if (token == "uci"){
-            std::cout << "id name Torrino v6\n";
+            std::cout << "id name Torrino v7\n";
             std::cout << "id author Giorgio\n";
             std::cout << "uciok" << std::endl;
         }

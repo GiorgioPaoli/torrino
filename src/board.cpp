@@ -1,6 +1,7 @@
 #include <iostream>
 #include "board.h"
 #include "attacks.h"
+#include "zobrist.h"
 
 // chiama dentro di se updateOccupancy e syncMailboxFromBitboards
 void Board::initBoard(){
@@ -42,6 +43,7 @@ void Board::initBoard(){
     enPassantSquare = -1;
     castlingRights = 0b1111;
     halfMoveClock = 0;
+    hash = computeHash();
 }
 
 void Board::clearBoard(){
@@ -113,15 +115,21 @@ void Board::makeMove(Move m, UndoInfo &undo){
     undo.castlingRights = castlingRights;
     undo.enPassantSquare = enPassantSquare;
     undo.halfMoveClock = halfMoveClock;
+    undo.hash = hash;
 
     // aggiorno la nostra BB
     uint64_t fromTo = SQ_BB(from) | SQ_BB(to);
     pieceBB[us][pt] ^= fromTo; // spegne il bit di from e accende quello in to
+    // XOR for Zobrist hashing, removing the pieces that moved from the initial square
+    hash ^= pieceKeys[movingPiece][from];
+    // adding the movingPiece
+    hash ^= pieceKeys[movingPiece][to];
 
     // aggiorno la BB avversaria -> CATTURA
     if (undo.capturedPiece != NO_PIECE){
         PieceType capturedPieceType = pieceTypeOf(undo.capturedPiece);
         pieceBB[them][capturedPieceType] ^= SQ_BB(to); // spegne il bit del pezzo catturato
+        hash ^= pieceKeys[undo.capturedPiece][to];
     }
 
     // aggiorna mailBox
@@ -152,6 +160,7 @@ void Board::makeMove(Move m, UndoInfo &undo){
             */
             int capturedSq = (us == WHITE) ? (to - 8) : (to + 8);
             pieceBB[them][PAWN] ^= SQ_BB(capturedSq);
+            hash ^= pieceKeys[makePiece(them, PAWN)][capturedSq];
             board[capturedSq] = NO_PIECE;
             occupiedByColor[them] ^= SQ_BB(capturedSq);
             occupiedAll = occupiedByColor[WHITE] | occupiedByColor[BLACK];
@@ -162,6 +171,8 @@ void Board::makeMove(Move m, UndoInfo &undo){
             int rookFrom = (us == WHITE) ? H1 : H8;
             int rookTo = (us == WHITE) ? F1 : F8;
             pieceBB[us][ROOK] ^= SQ_BB(rookFrom) | SQ_BB(rookTo); 
+            hash ^= pieceKeys[makePiece(us, ROOK)][rookFrom];
+            hash ^= pieceKeys[makePiece(us, ROOK)][rookTo];
             board[rookFrom] = NO_PIECE;
             board[rookTo] = makePiece(us, ROOK);
             occupiedByColor[us] ^= SQ_BB(rookFrom) | SQ_BB(rookTo);
@@ -173,6 +184,8 @@ void Board::makeMove(Move m, UndoInfo &undo){
             int rookFrom = (us == WHITE) ? A1 : A8;
             int rookTo = (us == WHITE) ? D1 : D8;
             pieceBB[us][ROOK] ^= SQ_BB(rookFrom) | SQ_BB(rookTo);
+            hash ^= pieceKeys[makePiece(us, ROOK)][rookFrom];
+            hash ^= pieceKeys[makePiece(us, ROOK)][rookTo];
             board[rookFrom] = NO_PIECE;
             board[rookTo] = makePiece(us, ROOK);
             occupiedByColor[us] ^= SQ_BB(rookFrom) | SQ_BB(rookTo);
@@ -183,6 +196,8 @@ void Board::makeMove(Move m, UndoInfo &undo){
             // cambia il pezzo su to da pedone a donna
             pieceBB[us][PAWN] ^= SQ_BB(to);
             pieceBB[us][QUEEN] ^= SQ_BB(to);
+            hash ^= pieceKeys[movingPiece][to];
+            hash ^= pieceKeys[makePiece(us, QUEEN)][to];
             board[to] = makePiece(us, QUEEN);
             break;
         }
@@ -190,6 +205,8 @@ void Board::makeMove(Move m, UndoInfo &undo){
             // cambia il pezzo su to da pedone a torre
             pieceBB[us][PAWN] ^= SQ_BB(to);
             pieceBB[us][ROOK] ^= SQ_BB(to);
+            hash ^= pieceKeys[movingPiece][to];
+            hash ^= pieceKeys[makePiece(us, ROOK)][to];
             board[to] = makePiece(us, ROOK);
             break;
         }
@@ -197,6 +214,8 @@ void Board::makeMove(Move m, UndoInfo &undo){
             // cambia il pezzo su to da pedone ad alfiere
             pieceBB[us][PAWN] ^= SQ_BB(to);
             pieceBB[us][BISHOP] ^= SQ_BB(to);
+            hash ^= pieceKeys[movingPiece][to];
+            hash ^= pieceKeys[makePiece(us, BISHOP)][to];
             board[to] = makePiece(us, BISHOP);
             break;
         }
@@ -204,6 +223,8 @@ void Board::makeMove(Move m, UndoInfo &undo){
             // cambia il pezzo su to da pedone a cavallo
             pieceBB[us][PAWN] ^= SQ_BB(to);
             pieceBB[us][KNIGHT] ^= SQ_BB(to);
+            hash ^= pieceKeys[movingPiece][to];
+            hash ^= pieceKeys[makePiece(us, KNIGHT)][to];
             board[to] = makePiece(us, KNIGHT);
             break;
         }
@@ -238,7 +259,18 @@ void Board::makeMove(Move m, UndoInfo &undo){
     if (to == H8) clearBitInt(castlingRights, 2);
     if (to == A8) clearBitInt(castlingRights, 3);
 
+    hash ^= castlingKeys[undo.castlingRights];
+    hash ^= castlingKeys[castlingRights];
+    if (undo.enPassantSquare != -1) {
+        hash ^= enPassantKeys[fileOf(undo.enPassantSquare)];
+    }
+    if (enPassantSquare != -1) {
+        hash ^= enPassantKeys[fileOf(enPassantSquare)];
+    }
+
     sideToMove = them;
+
+    hash ^= sideKey;
 }
 
 void Board::unmakeMove(Move m, const UndoInfo &undo){
@@ -257,6 +289,7 @@ void Board::unmakeMove(Move m, const UndoInfo &undo){
     castlingRights = undo.castlingRights;
     enPassantSquare = undo.enPassantSquare;
     halfMoveClock = undo.halfMoveClock;
+    hash = undo.hash;
     sideToMove = us;
 
     // aggiorna la loro BB
@@ -346,6 +379,21 @@ void Board::unmakeMove(Move m, const UndoInfo &undo){
     }
 
 
+}
+
+uint64_t Board::computeHash() {
+    uint64_t key = 0;
+    for (int sq = 0; sq < 64; sq++) {
+        if (board[sq] != NO_PIECE) {
+            key ^= pieceKeys[board[sq]][sq];
+        }
+    }
+
+    if (sideToMove == BLACK) key ^= sideKey;
+    key ^= castlingKeys[castlingRights];
+    if (enPassantSquare != -1) key ^= enPassantKeys[fileOf(enPassantSquare)];
+
+    return key;
 }
 
 bool Board::isSquareAttacked(int square, Color bySide){
@@ -461,8 +509,10 @@ void Board::loadFEN(const std::string &fen){
     }
 
     halfMoveClock = halfmove;
-
+    
     updateOccupancy();
+    
+    hash = computeHash();
 }
 
 
