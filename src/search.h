@@ -10,8 +10,6 @@ extern long long nodesCount;
 extern int rootScore;
 constexpr int MAX_PLY = 64;
 
-extern int movesPlayed;
-
 extern bool stopSearch;
 extern std::chrono::steady_clock::time_point deadline; 
 

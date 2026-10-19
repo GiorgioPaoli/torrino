@@ -1,5 +1,6 @@
 #include <iostream>
 #include <chrono>
+#include <cstdlib>
 #include "search.h"
 #include "movegen.h"
 using namespace std::chrono;
@@ -8,8 +9,6 @@ long long nodesCount = 0;
 int rootScore = 0;
 // MAX_PLY = 64
 Move killers[MAX_PLY][2];
-
-int movesPlayed = 0;        // è il numero di mosse giocate SOLO dal bot, per evaluation e per midgame e endgame
 
 bool stopSearch = false;
 steady_clock::time_point deadline; 
@@ -66,12 +65,17 @@ int negamax(Board &board, int depth, int alpha, int beta, int ply){
         if (steady_clock::now() > deadline) stopSearch = true;
     }
     if (stopSearch) return 0;
-    
+    // safe stop for ply
+    if (ply > MAX_PLY - 1) return evaluate(board);
+
+    // checks extension
+    Color us = board.sideToMove;
+    bool isInCheckVar = board.isInCheck(us);
+    if (isInCheckVar) depth++;
     if (depth == 0) {
         return quiescence(board, alpha, beta);
     }
 
-    Color us = board.sideToMove;
 
     /*
         Genera SOLO mosse Pseudo legali, controlla la legalita direttamente
@@ -112,7 +116,7 @@ int negamax(Board &board, int depth, int alpha, int beta, int ply){
     }
 
     if (legalMoves == 0) {
-        if (board.isInCheck(us)) return MATE - depth;
+        if (isInCheckVar) return MATE + ply;
         else return 0;
     }
 
@@ -196,6 +200,8 @@ Move findBestMoveTime(Board &board, int timeForMove, int maxDepth){
     for (int depth = 1; depth <= maxDepth; depth++) {
         Move move = findBestMove(board, depth, bestMove);
 
+        if (isSameMove(move, nullMove)) break;
+
         if (stopSearch) break;
         
         bestMove = move;
@@ -205,10 +211,21 @@ Move findBestMoveTime(Board &board, int timeForMove, int maxDepth){
         
         // DEBUG per nodi, mossa, tempo e profondita
         long long nps = (elapsed > 0) ? (nodesCount * 1000 / elapsed) : 0;
+        // check for mates in N
+        int plies = 0;
+        int N = 0;
+        if (rootScore > 99000 || rootScore < -99000) {
+            plies = 100000 - abs(rootScore);
+            N = (rootScore > 0) ? (plies + 1)/2 : -(plies + 1)/2;
+        }
+        
         std::cout   << "info " 
-                    << "depth " << depth
-                    << " score cp " << rootScore
-                    << " nodes " << nodesCount
+                    << "depth " << depth;
+
+        if (N != 0) std::cout << " score mate " << N;
+        else        std::cout << " score cp " << rootScore; 
+
+                    std::cout<< " nodes " << nodesCount
                     << " nps " << nps
                     << " time " << elapsed
                     << " pv " << moveToString(bestMove) 
