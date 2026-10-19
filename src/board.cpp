@@ -44,6 +44,8 @@ void Board::initBoard(){
     castlingRights = 0b1111;
     halfMoveClock = 0;
     hash = computeHash();
+    historyCount = 0;
+    history[historyCount++] = hash;
 }
 
 void Board::clearBoard(){
@@ -146,9 +148,12 @@ void Board::makeMove(Move m, UndoInfo &undo){
     // FLAGS
     enPassantSquare = -1;
     
-    // gestione DOUBLE_PAWN_PUSH
+    // DOUBLE_PAWN_PUSH and enPassant
     if (flags == DOUBLE_PAWN_PUSH){
-        enPassantSquare = (from + to) / 2;
+        int epSq = (from + to) / 2;
+        if (pawnAttacks[us][epSq] & pieceBB[them][PAWN]) {
+            enPassantSquare = epSq;
+        }    
     }
     
     switch (flags) {
@@ -271,6 +276,8 @@ void Board::makeMove(Move m, UndoInfo &undo){
     sideToMove = them;
 
     hash ^= sideKey;
+
+    history[historyCount++] = hash;
 }
 
 void Board::unmakeMove(Move m, const UndoInfo &undo){
@@ -378,7 +385,7 @@ void Board::unmakeMove(Move m, const UndoInfo &undo){
         default: break;
     }
 
-
+    historyCount--;
 }
 
 uint64_t Board::computeHash() {
@@ -411,7 +418,15 @@ bool Board::isInCheck(Color us){
     return isSquareAttacked(kingSq, opposite(us));
 }
 
-
+bool Board::isRepetition(){
+    uint64_t currHash = hash;
+    for (int i = 2; (i <= halfMoveClock && i <= historyCount - 1); i += 2) {
+        if (currHash == history[historyCount - 1 - i]) return true;
+    }
+    
+    return false;
+}
+ 
 
 // --- HELPER FUNCTIONS ---
 void Board::printBoard(){
@@ -508,11 +523,19 @@ void Board::loadFEN(const std::string &fen){
         enPassantSquare = rank * 8 + file;
     }
 
+    // keep the en passant square only if the side to move has a pawn that can capture there
+    if (enPassantSquare != -1 &&
+        !(pawnAttacks[opposite(sideToMove)][enPassantSquare] & pieceBB[sideToMove][PAWN])) {
+        enPassantSquare = -1;
+    }
+
     halfMoveClock = halfmove;
     
     updateOccupancy();
     
     hash = computeHash();
+    historyCount = 0;
+    history[historyCount++] = hash;
 }
 
 

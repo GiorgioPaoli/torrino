@@ -68,6 +68,9 @@ int negamax(Board &board, int depth, int alpha, int beta, int ply){
     // safe stop for ply
     if (ply > MAX_PLY - 1) return evaluate(board);
 
+    // checks for repetitions or HalfMoveClock (100 = 50 moves without captures or pawn moves)
+    if (board.isRepetition() || board.halfMoveClock >= 100) return 0;
+
     // checks extension
     Color us = board.sideToMove;
     bool isInCheckVar = board.isInCheck(us);

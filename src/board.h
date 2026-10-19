@@ -41,6 +41,8 @@ public:
 
     int halfMoveClock;          // contantore per la regola delle 50 mosse
     uint64_t hash;
+    uint64_t history[2048];
+    int historyCount;
 
 
     void initBoard();
@@ -62,6 +64,7 @@ public:
     bool isInCheck(Color us);                           // restituisce true se il re di colore us è sotto scacco
     bool isCheckmate(Color us);                         // restituisce true se il re di colore us è sotto scacco matto
     bool isStalemate(Color us);                         // restituisce true se il re di colore us non ha mossa disponibili e non è scacco
+    bool isRepetition();                                // checks for repetitions to not / to Draw
 
     // --- HELPER FUNCTIONS ---
     void printBoard();
