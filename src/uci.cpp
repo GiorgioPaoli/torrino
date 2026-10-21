@@ -22,7 +22,7 @@ void uciLoop(){
         iss >> token;                     // prima parola = il comando
 
         if (token == "uci"){
-            std::cout << "id name Torrino v7\n";
+            std::cout << "id name Torrino v9\n";
             std::cout << "id author Giorgio\n";
             std::cout << "uciok" << std::endl;
         }
@@ -76,24 +76,27 @@ void uciLoop(){
                 else if (param == "movetime") iss >> moveTime;   // tempo fisso per QUESTA mossa
             }
 
-            // calcolo del budget di tempo per questa mossa
-            int timeForMove;
+            int softTime, hardTime;
             if (moveTime > 0) {
-                timeForMove = moveTime;                          // se imposto, lo uso diretto
+                softTime = 86400000;
+                hardTime = moveTime;
             } else {
                 int timeLeft = (board.sideToMove == WHITE) ? wtime : btime;
-                int inc      = (board.sideToMove == WHITE) ? winc  : binc;
-                timeForMove  = timeLeft / 30 + inc / 2;          // stima semplice
-                if (timeForMove > timeLeft - 50) timeForMove = timeLeft - 50;  // rete di sicurezza
-                if (timeForMove < 1) timeForMove = 1;
+                int inc      = (board.sideToMove == WHITE) ? winc : binc;
+                softTime = timeLeft / 30 + inc;
+                hardTime = min(softTime * 2, timeLeft / 6);
+                // safety net
+                if (softTime > timeLeft - 100) softTime = timeLeft - 100;
+                if (hardTime > timeLeft - 100) hardTime = timeLeft - 100;
+                if (softTime < 1) softTime = 1;
+                if (hardTime < softTime) hardTime = softTime;
             }
 
-            // scelta della ricerca: profondita fissa (per i test) oppure a tempo
             Move best;
             if (depth > 0) {
-                best = findBestMoveTime(board, 86400000, depth);
+                best = findBestMoveTime(board, 86400000, 86400000, depth);
             } else {
-                best = findBestMoveTime(board, timeForMove, 64);
+                best = findBestMoveTime(board, softTime, hardTime, 64);
             }
 
             Move endMove {-1, -1, QUIET};

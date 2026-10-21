@@ -139,6 +139,7 @@ Move findBestMove(Board &board, int depth, Move prevMove){
         return Move{-1, -1, QUIET};
     }
 
+
     // mette la mossa migliore della search precedente in cima per ottimizzare alpha beta pruning
     if (prevMove.fromSquare != -1) {
         for (int i = 0; i < list.count; i++) {
@@ -164,6 +165,8 @@ Move findBestMove(Board &board, int depth, Move prevMove){
         int score = -negamax(board, depth - 1, -beta, -alpha, 1);
         board.unmakeMove(list.moves[i], undo);
 
+        if (stopSearch) break;      // this move wasnt fully searched, ignore its score
+
         if (score > bestScore) {
             bestScore = score;
             bestMove = list.moves[i];
@@ -184,32 +187,45 @@ Move findBestMove(Board &board, int depth, Move prevMove){
     return bestMove;
 }
 
-Move findBestMoveTime(Board &board, int timeForMove, int maxDepth){
+Move findBestMoveTime(Board &board, int softTime, int hardTime, int maxDepth){
     auto start = steady_clock::now();
-    deadline = start + milliseconds(timeForMove);
+    deadline = start + milliseconds(hardTime);
     stopSearch = false;
     nodesCount = 0;
     Move nullMove {-1, -1, QUIET};
-    // resetta l'array di killer moves a ogni nuova mossa
+    // resets the killers array at every new move
     for (int i = 0; i < MAX_PLY; i++) {
         for (int j = 0; j < 2; j++) {
             killers[i][j] = nullMove;
         }
     }
 
-
     Move bestMove {-1, -1, QUIET};
 
+    MoveList list;
+    generateLegalMoves(board, list);
+    if (list.count == 1) {
+        return Move(list.moves[0]);
+    }
+
+    long long lastIterTime = 0;
+    long long prevIterTime = 0;
+    double factor = 5;
+
     for (int depth = 1; depth <= maxDepth; depth++) {
+        auto startIterTime = steady_clock::now();
+
         Move move = findBestMove(board, depth, bestMove);
-
+        if (stopSearch) {
+            if (!isSameMove(move, nullMove)) {
+                bestMove = move;
+            }
+            break;
+        }
         if (isSameMove(move, nullMove)) break;
-
-        if (stopSearch) break;
         
         bestMove = move;
         
-        // stop morbido, se ho gia consumato meta budget, non parto con depth + 1 
         auto elapsed = duration_cast<milliseconds>(steady_clock::now() - start).count();
         
         // DEBUG per nodi, mossa, tempo e profondita
@@ -234,7 +250,16 @@ Move findBestMoveTime(Board &board, int timeForMove, int maxDepth){
                     << " pv " << moveToString(bestMove) 
                     << std::endl;
 
-        if (elapsed * 2 > timeForMove) break;
+        prevIterTime = lastIterTime;
+        lastIterTime = duration_cast<milliseconds>(steady_clock::now() - startIterTime).count();
+
+        if (prevIterTime > 5) {
+            factor = (double)lastIterTime / prevIterTime;
+            if (factor > 10) factor = 10;
+            if (factor < 2) factor = 2;
+        } 
+        
+        if (elapsed + lastIterTime * factor > hardTime) break;
     }
 
     // std::cout << evaluate(board) << std::endl;
