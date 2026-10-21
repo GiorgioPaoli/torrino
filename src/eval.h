@@ -109,4 +109,8 @@ constexpr const int *PST[PIECE_TYPE_NB] = {
 };
 
 int doublePawnPenalty(Board &board);
+int countPieces(Board &board);
+int centerDistance(int sq);
+int kingDistance(int sq1, int sq2);
+
 int evaluate(Board &board);

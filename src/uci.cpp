@@ -22,7 +22,7 @@ void uciLoop(){
         iss >> token;                     // prima parola = il comando
 
         if (token == "uci"){
-            std::cout << "id name Torrino v9\n";
+            std::cout << "id name Torrino v10\n";
             std::cout << "id author Giorgio\n";
             std::cout << "uciok" << std::endl;
         }
@@ -31,6 +31,13 @@ void uciLoop(){
         }
         else if (token == "ucinewgame"){
             board.initBoard();
+        }
+        else if (token == "eval"){
+            int score = evaluate(board);          // relative to the side to move
+            int white = (board.sideToMove == WHITE) ? score : -score;
+            std::cout << "eval (side to move): " << score
+                      << "   eval (white's point of view): " << white
+                      << "   phase: " << countPieces(board) << std::endl;
         }
         else if (token == "position"){
             std::string sub;
