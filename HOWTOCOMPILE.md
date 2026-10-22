@@ -1,1 +1,0 @@
-g++ -O3 -march=native -static *.cpp -o nome_versione.exe

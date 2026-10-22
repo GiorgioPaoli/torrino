@@ -181,6 +181,8 @@ passed pawns not pushed or not stopped). Developed in three steps, each tested a
 | v10.1 | Tapered eval (game phase) + mop-up   | v9    | 10+0.1 | 100   | 51 - 17 - 32  | +123 ± 59 |
 | v10.2 | King safety                          | v10.1 | 10+0.1 | 100   | 45 - 30 - 25  | +53 ± 60  |
 | v10.3 | Pawn structure                       | v10.2 | 10+0.1 | 100   | 56 - 28 - 16  | +100 ± 65 |
+| v10   | Final version                        | v9    | 10+0.1 | 100   | 62 - 25 - 13  | +125 ± 69 |
+| v10   | Final version                        | SF2000| 10+0.1 | 100   | 52 - 41 - 7   | +38 ± 67  |
 
 
 ### v10.1 - Tapered evaluation + mop-up
@@ -235,15 +237,18 @@ they're called, making the NPS ~30% slower, but the loss is balanced by the bett
 
 
 ### Conclusions
-Cumulative gain over v9 (sum of the three steps): ~ +276 Elo.
+Direct result: v10 vs v9 = +135 ± 69 (the sum of the three steps, +276, overestimates the
+total: each step was measured against its predecessor). Against SF2000: 55.5% (+38 ± 67),
+similar to v6-v8: the evaluation gains show mostly against similar engines; against Stockfish
+limited, which loses mostly through tactical errors, search depth matters more (v11, v12).
 Mobility and piece activity postponed until after magic bitboards (v11): they need slider
 attacks for every piece and would be too slow with the current attack functions.
 
 ### Lichess (bot: TorrinoBOT)
-Online from: —   to: —
+Online from: 22-10-2026   to: —
 | Category | Starting rating | Final rating | Games | Results W-L-D |
 |----------|-----------------|--------------|-------|---------------|
-| Bullet   |                 |              |       |               |
-| Blitz    |                 |              |       |               |
+| Bullet   | 1948            |              |       |               |
+| Blitz    | 1753            |              |       |               |
 
 Note: v10.1 was also online on 2026-10-22 (rating before v10: bullet ____, blitz ____)

@@ -1,18 +1,16 @@
 # Torrino
 
-**A UCI chess engine written from scratch in C++17 — bitboards, alpha-beta search, and a hand-crafted tapered evaluation, developed and measured version by version (≈ Stockfish `UCI_Elo` 2000 at 10+0.1).**
+**A UCI chess engine written from scratch in C++17: bitboards, alpha-beta search and a hand-crafted tapered evaluation, developed and measured version by version (≈ Stockfish `UCI_Elo` 2000 at 10+0.1).**
 
 ![C++17](https://img.shields.io/badge/C%2B%2B-17-blue)
 ![Platform](https://img.shields.io/badge/platform-Windows-lightgrey)
 ![Lichess bot](https://img.shields.io/badge/Lichess-TorrinoBOT-black)
 <!-- TODO: add a license badge once LICENSE exists, e.g. ![License: MIT](https://img.shields.io/badge/license-MIT-green) -->
 
-
-<!-- HERO: a GIF of a TorrinoBOT win. Lichess exports any game as a GIF:
-     https://lichess1.org/game/export/gif/<GAME_ID>.gif  -> save as docs/images/hero.gif and uncomment. -->
-<!-- <p align="center"><img src="docs/images/hero.gif" width="360" alt="TorrinoBOT winning a game on Lichess"></p> -->
-<p align="center"><img src="docs/gifs/hero.gif" width="360" alt="TorrinoBOT winning a game on Lichess"></p>
-<!-- > 🎞️ *Placeholder — GIF of a TorrinoBOT win on Lichess.* -->
+<!-- HERO GIF: must be the GIF of a whole GAME (animated), not of a single position.
+     On the Lichess game page: "Share & export" -> GIF, or https://lichess1.org/game/export/gif/<GAME_ID>.gif
+     Save it as docs/gifs/hero.gif (replacing the current static image). -->
+<p align="center"><img src="docs/gifs/hero.gif" width="360" alt="TorrinoBOT playing a game on Lichess"></p>
 
 Torrino plays online as **[TorrinoBOT](https://lichess.org/@/TorrinoBOT)** (bullet 1963, blitz 1751 as of October 22, 2026).
 Every change is first verified for correctness and then measured in engine-vs-engine matches;
@@ -23,13 +21,13 @@ the complete log of changes and results is in **[VERSIONS.md](VERSIONS.md)**.
 ## Highlights
 
 - **Measured, incremental development.** Each version was tested in a 100-game match against the previous one
-  (cutechess-cli, balanced openings, colours swapped). Cumulative gain from v3 to v10: several hundred Elo;
-  the latest step, **v10 vs v9: +135 ± 69 Elo** (95% CI, 62 wins, 25 losses, 13 draws).
+  (cutechess-cli, balanced openings, colours swapped). The latest step, **v10 vs v9: +135 ± 69 Elo**
+  (95% confidence interval; 62 wins, 25 losses, 13 draws).
 - **Correctness by construction.** Move generation matches the reference **perft** counts on the 6 standard test
   positions; every evaluation change is checked for colour symmetry; speed optimisations are checked to leave the
   search unchanged (identical node counts at fixed depth).
 - **Evaluation driven by real games.** Weaknesses found in Lichess games (king safety, passed pawns, unconverted
-  endgames) were reproduced as test positions, fixed, and re-measured: v10 gained **+135 Elo** over v9 while searching
+  endgames) were reproduced as test positions, fixed and re-measured: v10 gained **+135 Elo** over v9 while searching
   *less* deep (5.2 vs 5.5 plies on average).
 - **Strength against an external reference:** 55.5% (+38 ± 67 Elo) against Stockfish limited to `UCI_Elo` 2000
   in 100 games at 10+0.1.
@@ -37,10 +35,17 @@ the complete log of changes and results is in **[VERSIONS.md](VERSIONS.md)**.
 ---
 
 ## Table of contents
-[Quick start](#quick-start) · [Architecture](#architecture) · [Technical deep-dive](#technical-deep-dive) ·
-[Results](#results) · [Testing and validation](#testing-and-validation) · [Case studies](#case-studies) ·
-[Limitations and future work](#limitations-and-future-work) · [What I learned](#what-i-learned) ·
-[About](#about) · [References](#references)
+
+1. [Quick start](#quick-start)
+2. [Architecture](#architecture)
+3. [How the engine works](#how-the-engine-works)
+4. [Results](#results)
+5. [Testing and validation](#testing-and-validation)
+6. [Case studies](#case-studies)
+7. [Limitations and future work](#limitations-and-future-work)
+8. [What I learned](#what-i-learned)
+9. [About](#about)
+10. [References](#references)
 
 ---
 
@@ -65,7 +70,7 @@ info depth 7 score cp 35 nodes 2847000 nps 1300000 time 2190 pv e2e4
 bestmove ...
 ```
 Extra commands: `go depth N`, `eval` (static evaluation and game phase of the current position).
-Works with any UCI GUI (cutechess, En Croissant, Arena) and with
+Works with any UCI (Universal Chess Interface) GUI, such as cutechess, En Croissant or Arena, and with
 [lichess-bot](https://github.com/lichess-bot-devs/lichess-bot).
 
 ---
@@ -78,46 +83,58 @@ Works with any UCI GUI (cutechess, En Croissant, Arena) and with
 | Attack tables | [`attacks`](src/attacks.cpp) | precomputed pawn/knight/king attacks; sliding-piece attacks (ray loops) |
 | Move generation | [`movegen`](src/movegen.cpp) | pseudo-legal generation, legality check, move ordering (MVV-LVA, killers) |
 | Search | [`search`](src/search.cpp) | negamax alpha-beta, quiescence, iterative deepening, time management |
-| Evaluation | [`eval`](src/eval.cpp) | tapered PST, king safety, pawn structure, mop-up |
+| Evaluation | [`eval`](src/eval.cpp) | tapered piece-square tables, king safety, pawn structure, mop-up |
 | Protocol | [`uci`](src/uci.cpp) | UCI loop, time-control parsing, `info` output |
-| Testing | [`perft`](src/perft.cpp), [`tools/`](tools/) | perft; scripts for PGN statistics and charts |
-
-<!-- OPTIONAL: an architecture diagram (e.g. Mermaid) can replace or complement this table. -->
+| Testing | [`perft`](src/perft.cpp), [`tools/`](tools/) | perft; scripts for PGN statistics, charts and board diagrams |
 
 ---
 
-## Technical deep-dive
-
-Each subsection follows *what → why → result*. All Elo figures are 100-game cutechess matches with a 95% confidence
-interval; see [VERSIONS.md](VERSIONS.md) for every match.
+## How the engine works
 
 ### Board representation and move generation
-- **What:** 12 bitboards (one per piece type and colour) plus a 64-square mailbox; pseudo-legal generation followed by
-  a legality check; incremental `makeMove`/`unmakeMove` (no board copies).
-- **Why:** bitboards make attack and pawn-structure computations a few bitwise operations.
-- **Result:** perft matches the reference counts on all 6 standard positions (table below); ~7–8 M nodes/s in perft
-  (single thread). Sliding-piece attacks still use ray loops — the main speed bottleneck (see limitations).
+The board is stored as 12 bitboards (one 64-bit integer per piece type and colour) plus a 64-square mailbox.
+Bitboards turn attack detection and pawn-structure analysis into a few bitwise operations. Moves are generated
+pseudo-legally and then checked for legality; `makeMove`/`unmakeMove` update the position incrementally, without
+copying the board. Move generation matches the reference perft counts on all 6 standard positions and runs at
+about 7-8 M nodes/s in perft (single thread). Sliding-piece attacks still use ray loops, which is the main speed
+bottleneck (see [Limitations](#limitations-and-future-work)).
 
 ### Search
+
 | Technique | What it does | Measured effect |
 |---|---|---|
-| Alpha-beta (negamax) + iterative deepening | prunes provably irrelevant branches; reuses the previous best move | baseline (v2–v3) |
+| Alpha-beta (negamax) + iterative deepening | prunes branches that cannot change the result; reuses the previous best move | baseline (v2-v3) |
 | **Quiescence search** | at the horizon, keeps searching captures until the position is quiet (stand-pat) | **+195 ± 50 Elo** (v4 vs v3) |
-| **Killer moves** | tries quiet moves that caused a cutoff at the same ply first | **+59 ± 34 Elo**; 3.8× fewer nodes at fixed depth on 6 test positions (21× in the start position) |
-| Check extension + mate scores | searches one ply deeper in check; reports `mate N` | +31 ± 39 Elo (not significant at 95%, LOS 94%) |
+| **Killer moves** | tries first the quiet moves that caused a cutoff at the same ply | **+59 ± 34 Elo**; 3.8× fewer nodes at fixed depth on 6 test positions (21× in the start position) |
+| Check extension + mate scores | searches one ply deeper when in check; reports `mate N` | +31 ± 39 Elo (not significant at 95%, LOS 94%) |
 | **Zobrist hashing + repetition detection** | 64-bit incremental position keys; a repeated position scores as a draw | **+67 ± 48 Elo**; draw rate vs the previous version 67% → 51% |
-| Time management (soft/hard limits) | ideal time vs deadline; does not start a depth that cannot finish | +60 ± 55 Elo (v8), +49 ± 66 (v9, not significant at 95%) |
 
-### Evaluation (v10, developed in three measured steps)
-| Step | What | Why (the weakness it fixes) | Elo vs previous step |
-|---|---|---|---|
-| v10.1 | **Tapered evaluation** (middlegame/endgame blend by game phase) + **mop-up** | won endgames were not converted (KR vs K drawn by the fifty-move rule) | **+123 ± 59** |
-| v10.2 | **King safety**: castling rights, pawn shield, exposed king, attackers near the king | the engine opened its own king (case study 1) | **+53 ± 60** (LOS 95.8%) |
-| v10.3 | **Pawn structure**: passed (rank-dependent), isolated, defended, doubled pawns | passed pawns ignored (case study 2) | **+100 ± 65** |
-| **v10** | all three | — | **+135 ± 69 vs v9** (direct match) |
+Elo figures are from 100-game matches against the previous version, with 95% confidence intervals;
+LOS is the likelihood of superiority.
 
-The sum of the three steps (+276) overestimates the direct result (+135): gains measured against the immediately
-previous version do not add up linearly, so the direct match is the reported figure.
+### Time management
+The engine computes a *soft* limit (ideal time per move) and a *hard* limit (deadline), estimates the cost of the next
+depth from the previous iterations, and does not start a depth it cannot finish. When the deadline interrupts a
+depth, the best move found so far is kept. Measured gains: +60 ± 55 Elo (v8) and +49 ± 66 Elo (v9, not significant at 95%);
+the first attempt at v9 was too conservative and ended 30+1 games with more time than at the start
+(found by extracting thinking times from the game records, see [VERSIONS.md](VERSIONS.md)).
+
+### Evaluation
+The evaluation was rebuilt in v10 in three steps, each targeting a weakness found in real games and each tested
+against the previous step:
+
+- **v10.1 - Tapered evaluation and mop-up (+123 ± 59 Elo).** Middlegame and endgame scores are blended according
+  to the game phase (computed from the remaining pieces); in the endgame the king is centralised and, with a clear
+  material advantage, the losing king is driven to the corner. Before this, basic endgames such as KR vs K were drawn
+  by the fifty-move rule.
+- **v10.2 - King safety (+53 ± 60 Elo, LOS 95.8%).** Castling rights, pawn shield, exposed king, and enemy pieces
+  attacking the squares around the king, in the middlegame only. Before this, the engine opened its own king
+  ([case study 1](#case-studies)).
+- **v10.3 - Pawn structure (+100 ± 65 Elo).** Passed pawns (bonus growing with the rank, larger in the endgame),
+  isolated, defended and doubled pawns. Before this, passed pawns were ignored ([case study 2](#case-studies)).
+
+**v10 vs v9 in a direct match: +135 ± 69 Elo.** The sum of the three steps (+276) overestimates the total, because
+gains measured against the immediately previous version do not add up linearly; the direct match is the reported figure.
 
 ---
 
@@ -152,9 +169,9 @@ Data: ~112,000 engine moves from the cutechess game records ([`tools/pgn_depth_s
   <img alt="Score against Stockfish UCI_Elo 2000, version by version" src="docs/images/vs_sf2000_light.png">
 </picture>
 
-Against an external engine the progress is smaller than in self-play: v6–v10 all score 53–56% against Stockfish 2000,
-within each other's error margins. Limited Stockfish loses mainly through tactical errors, which deeper search
-exploits better than a refined evaluation — this motivates the next versions (faster move generation, transposition table).
+Against an external engine the progress is smaller than in self-play: v6-v10 all score 53-56% against Stockfish 2000,
+within each other's error margins. Limited Stockfish loses mainly through tactical errors, which a deeper search
+exploits better than a refined evaluation; this motivates the next versions (faster move generation, transposition table).
 
 ### Lichess
 
@@ -164,16 +181,16 @@ exploits better than a refined evaluation — this motivates the next versions (
 </picture>
 
 Bullet rating rose from 1808 (v4) to 1963 (v10) in six days of play against other bots and humans.
-Online ratings are noisy (opponent pool, network latency, time controls) and are reported as a complement to the
-controlled matches above, not as a substitute.
+Online ratings are noisy (opponent pool, network latency, time controls) and complement the controlled matches above;
+they do not replace them.
 
 ### Node throughput (NPS) and time to depth
 
-<!-- PLACEHOLDER: NPS and time-to-depth for every version (bin/engine_v*.exe) on the same positions,
-     measured with nothing else running. Planned chart: docs/images/nps_per_version_*.png -->
-> 📊 *Placeholder — NPS and time to reach depth 6 for each version, measured on the same positions on an idle machine.*
+<!-- PLACEHOLDER: NPS and time to depth for every version (bin/engine_v*.exe) on the same positions,
+     measured with nothing else running (tools/bench_versions.py). Planned chart: docs/images/nps_per_version_*.png -->
+*Placeholder: nodes per second and time to reach depth 6 for each version, measured on the same positions on an idle machine.*
 
-Current figure (v10, single thread, Intel i5 10th gen laptop): ~1.0–1.3 M nodes/s in the middlegame.
+Current figure (v10, single thread, Intel i5 10th gen laptop): about 1.0-1.3 M nodes/s in the middlegame.
 
 ### Basic endgames: v9 vs v10.1
 
@@ -193,14 +210,14 @@ two bishops vs K ×1); v10.1 never failed to convert such an advantage.
 
 | Check | Method | Status |
 |---|---|---|
-| Move generation | perft on the 6 standard positions (table below) | ✅ all match |
-| Zobrist keys | incremental key compared with the key recomputed from scratch at every perft node | ✅ |
-| Repetition history | history balanced after every `unmakeMove`; 8 repetition test cases | ✅ |
-| En passant edge cases | perft cross-checked against [python-chess](https://python-chess.readthedocs.io/) | ✅ |
-| Evaluation | colour-mirrored positions must evaluate identically | ✅ on every change |
-| Speed optimisations | identical node count at fixed depth before/after | ✅ |
-| Strength | 100-game matches vs the previous version + Stockfish reference | every version |
-| Regression positions | critical positions from lost Lichess games re-run after each change | case studies below |
+| Move generation | perft on the 6 standard positions (table below) | all match |
+| Zobrist keys | incremental key compared with the key recomputed from scratch at every perft node | pass |
+| Repetition history | history balanced after every `unmakeMove`; 8 repetition test cases | pass |
+| En passant edge cases | perft cross-checked against [python-chess](https://python-chess.readthedocs.io/) | pass |
+| Evaluation | colour-mirrored positions must evaluate identically | checked on every change |
+| Speed optimisations | identical node count at fixed depth before and after | checked on every change |
+| Strength | 100-game matches vs the previous version, plus Stockfish as an external reference | every version |
+| Regression positions | critical positions from lost Lichess games re-run after each change | see case studies |
 <!-- TODO (future): automated tests (e.g. GitHub Actions running perft), sanitizers under Linux/WSL. -->
 
 | Perft position | Depth | Nodes |
@@ -225,7 +242,7 @@ Weaknesses found in real games, reproduced as test positions, and fixed. Red arr
 **1. Opening its own king** (Lichess, 3+1)<br>
 A pawn up (Stockfish +4.2), v9 played **39.f4??** and later **41.f5??**, walking its king to h3: the evaluation had
 no notion of king safety. Stockfish's evaluation dropped to +0.2 (green: Stockfish's Rg1, keeping the pawns in front of the king).<br>
-**Fix:** v10.2 (king safety) — in the same position v10.2 plays Kg1.
+**Fix:** v10.2 (king safety). In the same position v10.2 plays Kg1.
 
 </td>
 <td width="50%"><img src="docs/images/case_king_safety.svg" alt="Position before 39.f4 in TorrinoBOT vs GroshBoss"></td>
@@ -236,7 +253,7 @@ no notion of king safety. Stockfish's evaluation dropped to +0.2 (green: Stockfi
 **2. Ignoring a passed pawn** (Lichess, 1+1, Torrino is Black)<br>
 At +4.4, v10.1 moved its rook off the h-file (**27...Rf6?**) to win two pawns; White's h-pawn ran to h7 and the game
 ended in a draw by perpetual check (green: Stockfish's a6, keeping the rook on the h-file).<br>
-**Fix:** v10.3 (passed pawns) — the engine keeps the blockade (27...Nb6 at depth 8).
+**Fix:** v10.3 (passed pawns). The engine keeps the blockade (27...Nb6 at depth 8).
 
 </td>
 <td width="50%"><img src="docs/images/case_passed_pawn.svg" alt="Position before 27...Rf6 in maia9 vs TorrinoBOT"></td>
@@ -245,9 +262,9 @@ ended in a draw by perpetual check (green: Stockfish's a6, keeping the rook on t
 <td width="50%" valign="top">
 
 **3. A queen up, no mate** (cutechess, v10.1 vs v9)<br>
-v9 kept an extra queen for 192 moves and drew by the fifty-move rule: without an endgame plan, the king never
-approached the edge.<br>
-**Fix:** v10.1 (tapered evaluation + mop-up) — basic mates converted in 11–14 moves.
+v9 kept an extra queen for 192 moves and drew by the fifty-move rule: without an endgame plan, its king never
+helped push the opponent's king to the edge.<br>
+**Fix:** v10.1 (tapered evaluation + mop-up). Basic mates are now converted in 11-14 moves.
 
 </td>
 <td width="50%"><img src="docs/images/case_kq_vs_k.svg" alt="Final position of a KQ vs K game drawn by the fifty-move rule"></td>
@@ -255,27 +272,26 @@ approached the edge.<br>
 </table>
 
 Other bugs found through testing: an uninitialised en passant square causing random crashes (found when a cutechess
-match stopped on an engine crash); a time-management rule that ended 30+1 games with more time than at the start
-(found by extracting thinking times from the game records).
+match stopped on an engine crash), and the time-management issue described above.
 
 ---
 
 ## Limitations and future work
 
 **Limitations**
-- **Search depth** of about 5–6 plies at 10+0.1 and 7–9 in blitz: tactics beyond the horizon are missed.
+- **Search depth** of about 5-6 plies at 10+0.1 and 7-9 in blitz: tactics beyond the horizon are missed.
 - **No transposition table**: positions reached by different move orders are searched again
-  (in KR vs K, depth 9 needs ~7 M nodes).
-- **Sliding-piece attacks by ray loops**: ~1.0–1.3 M nodes/s in the middlegame.
-- **No mobility / piece-activity terms**; hand-set evaluation weights (not tuned from data).
+  (in KR vs K, depth 9 needs about 7 M nodes).
+- **Sliding-piece attacks by ray loops**: about 1.0-1.3 M nodes/s in the middlegame.
+- **No mobility or piece-activity terms**; evaluation weights set by hand (not tuned from data).
 - Single-threaded; no opening book; no endgame tablebases.
 
 **Next steps**
-1. **Magic bitboards** — table-lookup sliding attacks (move generation, check detection, evaluation).
-2. **Transposition table** — reuse search results across transpositions; better move ordering.
-3. **Pruning and reductions** — history heuristic, null-move pruning, late move reductions (LMR).
-4. **Mobility and piece activity** — cheap once attacks are table lookups.
-5. **Evaluation tuning from data** — Texel tuning on positions from the engine's own games.
+1. **Magic bitboards**: table-lookup sliding attacks (move generation, check detection, evaluation).
+2. **Transposition table**: reuse search results across transpositions; better move ordering.
+3. **Pruning and reductions**: history heuristic, null-move pruning, late move reductions (LMR).
+4. **Mobility and piece activity**: cheap once attacks are table lookups.
+5. **Evaluation tuning from data**: Texel tuning on positions from the engine's own games.
 
 ---
 
@@ -285,7 +301,7 @@ match stopped on an engine crash); a time-management rule that ended 30+1 games 
      - why chained self-play Elo overestimates progress, and why a direct match is needed;
      - measuring before optimising (e.g. time management v9: the first attempt ended games with unused time);
      - correctness tools (perft, symmetry tests, identical node counts) caught bugs that games alone would not show;
-     - a faster but dumber engine is not stronger: v10 searches less deep than v9 and wins 68.5% of games. -->
+     - a faster engine is not necessarily stronger: v10 searches less deep than v9 and wins 68.5% of the games. -->
 *Placeholder.*
 
 ---
@@ -301,7 +317,7 @@ match stopped on an engine crash); a time-management rule that ended 30+1 games 
 
 ## References
 
-- [Chess Programming Wiki](https://www.chessprogramming.org/) — algorithms, perft positions, evaluation ideas.
+- [Chess Programming Wiki](https://www.chessprogramming.org/): algorithms, perft positions, evaluation ideas.
 - [UCI protocol](https://www.shredderchess.com/chess-features/uci-universal-chess-interface.html).
 - [cutechess](https://github.com/cutechess/cutechess) (matches), [lichess-bot](https://github.com/lichess-bot-devs/lichess-bot) (online play),
   [Stockfish](https://stockfishchess.org/) (reference opponent and game analysis), [python-chess](https://python-chess.readthedocs.io/) (cross-checks, board diagrams).
