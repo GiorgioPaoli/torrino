@@ -26,6 +26,19 @@ constexpr int BISHOP_ATTACK_WEIGHT = 2;
 constexpr int ROOK_ATTACK_WEIGHT   = 3;
 constexpr int QUEEN_ATTACK_WEIGHT  = 5;
 
+// --- pawn structure ---
+// passed pawn bonus by relative rank (index 1 = starting rank, 6 = one step from promotion)
+constexpr int PASSED_PAWN_MG[8] = { 0, 5, 10, 15, 25, 45,  70, 0 };
+constexpr int PASSED_PAWN_EG[8] = { 0, 10, 20, 35, 60, 100, 150, 0 };
+constexpr int ISOLATED_PAWN_MG = 10;     // penalty: no friendly pawns on the adjacent files
+constexpr int ISOLATED_PAWN_EG = 15;
+constexpr int DEFENDED_PAWN_MG = 5;      // bonus: pawn defended by another pawn (pawn chain)
+constexpr int DEFENDED_PAWN_EG = 8;
+
+// masks for pawn structure, filled once at startup by initPawnMasks()
+extern uint64_t passedMask[COLOR_NB][64];   // squares in front of a pawn on its file and the adjacent files
+extern uint64_t adjacentFilesMask[8];       // files to the left and right of a file
+
 /*
     Piece Square Tables
 
@@ -123,7 +136,7 @@ constexpr const int *PST[PIECE_TYPE_NB] = {
     PAWN_PST, KNIGHT_PST, BISHOP_PST, ROOK_PST, QUEEN_PST, MG_KING_PST
 };
 
-
+void initPawnMasks();
 
 int doublePawnPenalty(Board &board);
 int countPieces(Board &board);
@@ -133,6 +146,7 @@ int castlingSafety(Board &board, int sqw, int sqb);             // small bonus p
 int pawnShield(Board &board, Color side, int kingSq);           // pawn shield, if the kings on first rank and its castled, for each own pawn on 2nd and 3rd rank bonus, elsewhere -> penalty
 int exposedKing(Board &board, Color side, int kingSq);          // if the opponent still has a queen and the side king is not on 1st rank -> penalty that increase as ranks go on
 int kingAttack(Board &board, Color side, int kingSq);
+void pawnStructure(Board &board, int &mg, int &eg); 
 
 
 

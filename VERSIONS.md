@@ -170,7 +170,19 @@ Notes: opening book off (same as previous versions), concurrency 2 (1 reserved f
 
 
 
-## v10 - 
+## v10 - Evaluation rework
+Commit: tag `v10`
+Goal: fix weaknesses seen in Lichess games (won endgames not converted, king safety ignored,
+passed pawns not pushed or not stopped). Developed in three steps, each tested against the previous one.
+
+### Steps overview
+| Step  | Changes                              | vs    | TC     | Games | Results W-L-D | Elo       |
+|-------|--------------------------------------|-------|--------|-------|---------------|-----------|
+| v10.1 | Tapered eval (game phase) + mop-up   | v9    | 10+0.1 | 100   | 51 - 17 - 32  | +123 ± 59 |
+| v10.2 | King safety                          | v10.1 | 10+0.1 | 100   | 45 - 30 - 25  | +53 ± 60  |
+| v10.3 | Pawn structure                       | v10.2 | 10+0.1 | 100   | 56 - 28 - 16  | +100 ± 65 |
+
+
 ### v10.1 - Tapered evaluation + mop-up
 - Game phase from remaining pieces (N=1, B=1, R=2, Q=4; 24 = opening, 0 = endgame);
   middlegame and endgame scores blended by phase
@@ -210,6 +222,28 @@ Result: +53 ± 60 Elo vs v10.1 (LOS 95.8%) despite ~30% lower NPS.
 The new funcionts in v10.2 call many tames the slow attack tables, and they are computed every time 
 they're called, making the NPS ~30% slower, but the loss is balanced by the better search.
 
+### v10.3 - Pawn structure
+- Passed pawns: bonus by relative rank, much larger in the endgame
+  (mg 5 → 70, eg 10 → 150 from the 2nd to the 7th rank); precomputed masks (initPawnMasks)
+- Isolated pawns: penalty (mg 10, eg 15)
+- Defended pawns (pawn chains): bonus per pawn defended by another pawn (mg 5, eg 8)
+- Doubled pawns moved into the same function (pawnStructure)
+
+| Opponent | TC     | Games | Results W-L-D | Elo       |
+|----------|--------|-------|---------------|-----------|
+| v10.2    | 10+0.1 | 100   | 56 - 28 - 16  | +100 ± 65 |
 
 
+### Conclusions
+Cumulative gain over v9 (sum of the three steps): ~ +276 Elo.
+Mobility and piece activity postponed until after magic bitboards (v11): they need slider
+attacks for every piece and would be too slow with the current attack functions.
 
+### Lichess (bot: TorrinoBOT)
+Online from: —   to: —
+| Category | Starting rating | Final rating | Games | Results W-L-D |
+|----------|-----------------|--------------|-------|---------------|
+| Bullet   |                 |              |       |               |
+| Blitz    |                 |              |       |               |
+
+Note: v10.1 was also online on 2026-10-22 (rating before v10: bullet ____, blitz ____)

@@ -20,6 +20,81 @@ int doublePawnPenalty(Board &board){
     return blackPenalty - whitePenalty;
 }
 
+uint64_t passedMask[COLOR_NB][64];
+uint64_t adjacentFilesMask[8];
+
+// builds the pawn structure masks, called once at startup
+void initPawnMasks() {
+    for (int f = 0; f < 8; f++) {
+        adjacentFilesMask[f] = 0ULL;
+        if (f > 0) adjacentFilesMask[f] |= FILE_MASKS[f - 1];
+        if (f < 7) adjacentFilesMask[f] |= FILE_MASKS[f + 1];
+    }
+
+    for (int sq = 0; sq < 64; sq++) {
+        int file = fileOf(sq);
+        int rank = rankOf(sq);
+        uint64_t files = FILE_MASKS[file] | adjacentFilesMask[file];
+
+        // ranks in front of the pawn: above it for white, below it for black
+        uint64_t aheadWhite = 0ULL;
+        uint64_t aheadBlack = 0ULL;
+        for (int r = rank + 1; r < 8; r++)  aheadWhite |= 0xFFULL << (8 * r);
+        for (int r = rank - 1; r >= 0; r--) aheadBlack |= 0xFFULL << (8 * r);
+
+        passedMask[WHITE][sq] = files & aheadWhite;
+        passedMask[BLACK][sq] = files & aheadBlack;
+    }
+}
+
+// passed, isolated, defended and doubled pawns; adds (white - black) to both mg and eg
+void pawnStructure(Board &board, int &mg, int &eg) {
+    uint64_t whitePawns = board.pieceBB[WHITE][PAWN];
+    uint64_t blackPawns = board.pieceBB[BLACK][PAWN];
+
+    // white pawns
+    uint64_t bb = whitePawns;
+    while (bb) {
+        int sq = popLsb(bb);
+        int relRank = rankOf(sq);                                   // 1 = starting rank ... 6 = 7th rank
+        if ((passedMask[WHITE][sq] & blackPawns) == 0) {            // no black pawn can stop it
+            mg += PASSED_PAWN_MG[relRank];
+            eg += PASSED_PAWN_EG[relRank];
+        }
+        if ((adjacentFilesMask[fileOf(sq)] & whitePawns) == 0) {    // no white pawn on the adjacent files
+            mg -= ISOLATED_PAWN_MG;
+            eg -= ISOLATED_PAWN_EG;
+        }
+    }
+
+    // black pawns: same logic, mirrored ranks and opposite signs
+    bb = blackPawns;
+    while (bb) {
+        int sq = popLsb(bb);
+        int relRank = 7 - rankOf(sq);
+        if ((passedMask[BLACK][sq] & whitePawns) == 0) {
+            mg -= PASSED_PAWN_MG[relRank];
+            eg -= PASSED_PAWN_EG[relRank];
+        }
+        if ((adjacentFilesMask[fileOf(sq)] & blackPawns) == 0) {
+            mg += ISOLATED_PAWN_MG;
+            eg += ISOLATED_PAWN_EG;
+        }
+    }
+
+    // defended pawns (pawn chains): pawns standing on a square attacked by a friendly pawn
+    int whiteDefended = popcount(whitePawns & (shiftNorthEast(whitePawns) | shiftNorthWest(whitePawns)));
+    int blackDefended = popcount(blackPawns & (shiftSouthEast(blackPawns) | shiftSouthWest(blackPawns)));
+    mg += (whiteDefended - blackDefended) * DEFENDED_PAWN_MG;
+    eg += (whiteDefended - blackDefended) * DEFENDED_PAWN_EG;
+
+    // doubled pawns (already white - black)
+    int doubled = doublePawnPenalty(board);
+    mg += doubled;
+    eg += doubled;
+}
+
+
 /*
     VERY IMPORTANT
 
@@ -185,10 +260,8 @@ int evaluate(Board &board) {
     phase = countPieces(board);
     if (phase > 24) phase = 24;
 
-    // penalty for doubled pawns = 15 per doubled pawn
-    int doublePawns = doublePawnPenalty(board);
-    mg += doublePawns;
-    eg += doublePawns;
+    // pawn structure: passed, isolated, defended and doubled pawns
+    pawnStructure(board, mg, eg);
     
     // penalty for non developed pieces
     if (board.board[B1] == W_KNIGHT) {mg -= 30; piecesNotDevelopedWhite++;}

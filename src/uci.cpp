@@ -14,6 +14,7 @@ void uciLoop(){
     initZobrist();
     initPawnAttacks(); initKnightAttacks(); initKingAttacks();
     initSliderMasks();
+    initPawnMasks();
     board.initBoard();
 
     std::string line;
