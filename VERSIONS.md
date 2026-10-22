@@ -181,7 +181,7 @@ passed pawns not pushed or not stopped). Developed in three steps, each tested a
 | v10.1 | Tapered eval (game phase) + mop-up   | v9    | 10+0.1 | 100   | 51 - 17 - 32  | +123 ± 59 |
 | v10.2 | King safety                          | v10.1 | 10+0.1 | 100   | 45 - 30 - 25  | +53 ± 60  |
 | v10.3 | Pawn structure                       | v10.2 | 10+0.1 | 100   | 56 - 28 - 16  | +100 ± 65 |
-| v10   | Final version                        | v9    | 10+0.1 | 100   | 62 - 25 - 13  | +125 ± 69 |
+| v10   | Final version                        | v9    | 10+0.1 | 100   | 62 - 25 - 13  | +135 ± 69 |
 | v10   | Final version                        | SF2000| 10+0.1 | 100   | 52 - 41 - 7   | +38 ± 67  |
 
 
