@@ -5,7 +5,7 @@
 ![C++17](https://img.shields.io/badge/C%2B%2B-17-blue)
 ![Platform](https://img.shields.io/badge/platform-Windows-lightgrey)
 ![Lichess bot](https://img.shields.io/badge/Lichess-TorrinoBOT-black)
-<!-- TODO: add a license badge once LICENSE exists, e.g. ![License: MIT](https://img.shields.io/badge/license-MIT-green) -->
+![License: MIT](https://img.shields.io/badge/license-MIT-green)
 
 <!-- HERO GIF: must be the GIF of a whole GAME (animated), not of a single position.
      On the Lichess game page: "Share & export" -> GIF, or https://lichess1.org/game/export/gif/<GAME_ID>.gif
@@ -401,5 +401,4 @@ match stopped on an engine crash), and the time-management issue described above
 
 ## License and contact
 
-<!-- TODO: add a LICENSE file (e.g. MIT). -->
-License: TODO · Author: Giorgio Paoli · Contact: TODO
+License: [MIT](LICENSE) · Author: Giorgio Paoli · Contact: TODO
