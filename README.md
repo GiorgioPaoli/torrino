@@ -111,7 +111,8 @@ bottleneck (see [Limitations](#limitations-and-future-work)).
 | **Zobrist hashing + repetition detection** | 64-bit incremental position keys; a repeated position scores as a draw | **+67 ± 48 Elo**; draw rate vs the previous version 67% → 51% |
 
 Elo figures are from 100-game matches against the previous version, with 95% confidence intervals;
-LOS is the likelihood of superiority.
+LOS is the likelihood of superiority. The average depth reached in games stayed around 5-5.5 plies from v5 onwards, so
+these gains come from searching better rather than deeper (see [search depth per version](#search-depth-stronger-without-searching-deeper)).
 
 ### Time management
 The engine computes a *soft* limit (ideal time per move) and a *hard* limit (deadline), estimates the cost of the next
@@ -121,21 +122,27 @@ the first attempt at v9 was too conservative and ended 30+1 games with more time
 (found by extracting thinking times from the game records, see [VERSIONS.md](VERSIONS.md)).
 
 ### Evaluation
-The evaluation was rebuilt in v10 in three steps, each targeting a weakness found in real games and each tested
-against the previous step:
+The score is in centipawns (100 = one pawn), from the point of view of the side to move. It is computed twice,
+with middlegame and endgame weights, and the two are blended by the game phase (from the remaining pieces: knight 1,
+bishop 1, rook 2, queen 4, capped at 24): `score = (mg * phase + eg * (24 - phase)) / 24`. The terms:
 
-- **v10.1 - Tapered evaluation and mop-up (+123 ± 59 Elo).** Middlegame and endgame scores are blended according
-  to the game phase (computed from the remaining pieces); in the endgame the king is centralised and, with a clear
-  material advantage, the losing king is driven to the corner. Before this, basic endgames such as KR vs K were drawn
-  by the fifty-move rule.
-- **v10.2 - King safety (+53 ± 60 Elo, LOS 95.8%).** Castling rights, pawn shield, exposed king, and enemy pieces
-  attacking the squares around the king, in the middlegame only. Before this, the engine opened its own king
-  ([case study 1](#case-studies)).
-- **v10.3 - Pawn structure (+100 ± 65 Elo).** Passed pawns (bonus growing with the rank, larger in the endgame),
-  isolated, defended and doubled pawns. Before this, passed pawns were ignored ([case study 2](#case-studies)).
+- **Material and placement.** Pawn 100, knight 320, bishop 330, rook 500, queen 900, plus piece-square tables that
+  favour central knights, advanced pawns and so on. The king has two tables: a sheltered corner in the middlegame,
+  the centre in the endgame.
+- **Development (middlegame).** -30 per minor piece still on its starting square; -80 for an early queen move.
+- **King safety (middlegame, skipped when little material is left).** Castling rights, a pawn shield in front of the
+  castled king, a penalty for a king that walks up the board while the enemy queen is alive, and a penalty for enemy
+  pieces attacking the squares around the king. The last one grows with the square of the attackers' weight (knight
+  and bishop 2, rook 3, queen 5) and needs two or more attackers, so a stray piece is ignored but a coordinated
+  attack is punished heavily.
+- **Pawn structure.** Bonus for passed pawns, growing with the rank (up to 70 in the middlegame and 150 in the
+  endgame); penalties for isolated and doubled pawns; small bonus for pawns defended by another pawn.
+- **Mop-up (endgame).** With a lead of at least a rook in pieces, the evaluation rewards pushing the losing king to the
+  edge and bringing the winning king closer, which lets the engine convert basic endgames such as king and rook
+  against king instead of drifting to a fifty-move draw.
 
-**v10 vs v9 in a direct match: +135 ± 69 Elo.** The sum of the three steps (+276) overestimates the total, because
-gains measured against the immediately previous version do not add up linearly; the direct match is the reported figure.
+Each group was added after finding the matching weakness in real games ([case studies](#case-studies)); the measured
+effect of each step is in the [version history](#version-history).
 
 ---
 
