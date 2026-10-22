@@ -55,8 +55,8 @@ the complete log of changes and results is in **[VERSIONS.md](VERSIONS.md)**.
 Requirements: a C++17 compiler (developed with g++ / MinGW-w64 on Windows).
 
 ```bash
-git clone https://github.com/GiorgioPl/chess-engine.git
-cd chess-engine/src
+git clone https://github.com/GiorgioPaoli/torrino.git
+cd torrino/src
 g++ -O3 -march=native -flto -static -std=c++17 *.cpp -o ../bin/torrino.exe
 ../bin/torrino.exe
 ```

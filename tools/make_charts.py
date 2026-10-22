@@ -3,7 +3,8 @@
 Usage: python tools/make_charts.py docs/images
 Writes <name>_light.png and <name>_dark.png for each chart.
 Data: match results from VERSIONS.md (below), docs/data/depth_per_version.csv
-(from tools/pgn_depth_stats.py) and docs/data/lichess_rating_history.json (Lichess API).
+(from tools/pgn_depth_stats.py), docs/data/bench_versions.csv (from tools/bench_versions.py)
+and docs/data/lichess_rating_history.json (Lichess API).
 """
 import sys, os, math, csv, json, datetime
 import matplotlib
@@ -164,6 +165,31 @@ def chart_depth(mode):
     save(fig, "depth_per_version", mode)
 
 
+def chart_nps(mode):
+    """Aggregate nodes per second at fixed depth 6 over the 6 bench positions (tools/bench_versions.py)."""
+    t = THEMES[mode]
+    nodes, secs = {}, {}
+    for r in csv.DictReader(open(os.path.join(DATA, "bench_versions.csv"))):
+        if r["nodes"]:      # v3 and v4 do not report nodes
+            nodes[r["version"]] = nodes.get(r["version"], 0) + int(r["nodes"])
+            secs[r["version"]] = secs.get(r["version"], 0.0) + float(r["seconds"])
+    versions = sorted(nodes, key=lambda v: int(v[1:]))
+    nps = [nodes[v] / secs[v] / 1e6 for v in versions]
+    fig, ax = base(t)
+    for i, (v, y) in enumerate(zip(versions, nps)):
+        ax.bar(i, y, width=0.5, color=t["s2"] if v == "v10" else t["s1"], linewidth=0, zorder=3)
+        ax.annotate(f"{y:.2f} M", (i, y), xytext=(0, 4), textcoords="offset points",
+                    ha="center", va="bottom", fontsize=9, color=t["ink"])
+    ax.set_xticks(range(len(versions)), versions)
+    ax.set_xlim(-0.6, len(versions) - 0.4)
+    ax.set_ylim(0, max(nps) * 1.2)
+    ax.set_ylabel("Million nodes per second", fontsize=9, color=t["muted"])
+    titles(fig, t, "Search speed per version",
+           "Total nodes / total time, depth 6, 6 positions, single thread, fastest of 3 runs (v3-v4 do not report nodes)")
+    fig.subplots_adjust(left=0.1, right=0.97, top=0.8, bottom=0.1)
+    save(fig, "nps_per_version", mode)
+
+
 def chart_lichess(mode):
     """Daily Lichess rating from the Lichess API (months are 0-based in the API)."""
     t = THEMES[mode]
@@ -206,5 +232,6 @@ for m in ("light", "dark"):
     chart_per_version(m)
     chart_vs_sf(m)
     chart_depth(m)
+    chart_nps(m)
     chart_lichess(m)
 print("done:", sorted(f for f in os.listdir(OUT) if f.endswith(".png")))
