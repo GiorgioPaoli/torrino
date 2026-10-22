@@ -39,13 +39,14 @@ the complete log of changes and results is in **[VERSIONS.md](VERSIONS.md)**.
 1. [Quick start](#quick-start)
 2. [Architecture](#architecture)
 3. [How the engine works](#how-the-engine-works)
-4. [Results](#results)
-5. [Testing and validation](#testing-and-validation)
-6. [Case studies](#case-studies)
-7. [Limitations and future work](#limitations-and-future-work)
-8. [What I learned](#what-i-learned)
-9. [About](#about)
-10. [References](#references)
+4. [Version history](#version-history)
+5. [Results](#results)
+6. [Testing and validation](#testing-and-validation)
+7. [Case studies](#case-studies)
+8. [Limitations and future work](#limitations-and-future-work)
+9. [What I learned](#what-i-learned)
+10. [About](#about)
+11. [References](#references)
 
 ---
 
@@ -138,7 +139,40 @@ gains measured against the immediately previous version do not add up linearly; 
 
 ---
 
+## Version history
+
+The engine was built in small steps, and every step is a tagged version in the repository. The table summarises what
+each version added and what it gained in a 100-game match against the previous one (95% interval; the full test
+logs are in [VERSIONS.md](VERSIONS.md)).
+
+| Version | What it added | Elo vs previous |
+|---|---|---|
+| v1, v1.5 | First working engine: board, move generation, basic search <!-- TODO: check what v1 and v1.5 contain --> | - |
+| v2 | Alpha-beta pruning | - |
+| v3 | Iterative deepening (search depth 1, 2, 3... instead of one fixed depth) | - |
+| v4 | Quiescence search, development terms in the evaluation, en passant fix | +195 ± 50 |
+| v5 | Killer-move ordering | +59 ± 34 |
+| v6 | Check extension and mate scores (`score mate N`) | +31 ± 39 |
+| v7 | Zobrist hashing, repetition detection, fifty-move rule | +67 ± 48 |
+| v8 | Time management: soft and hard limits, instant reply with a single legal move | +60 ± 55 |
+| v9 | Next-depth cost estimate, keeping interrupted depths, better time formula | +49 ± 66 (50 games, 30+1) |
+| v10.1 | Tapered evaluation (game phase) and mop-up for basic endgames | +123 ± 59 |
+| v10.2 | King safety in the middlegame | +53 ± 60 |
+| v10.3 | Pawn structure (passed, isolated, defended, doubled pawns) | +100 ± 65 |
+| **v10** | Final result of the three v10 steps, measured directly against v9 | **+135 ± 69** |
+
+The pattern is visible in the table: the early versions (v4-v7) improved the *search*, v8-v9 improved how the
+engine uses its *time*, and v10 improved the *evaluation*. v11 (speed) and v12 (transposition table) are planned
+next.
+
+---
+
 ## Results
+
+This section looks at the same engine from four sides: strength in self-play, search depth, strength against an
+external engine, and speed. They have to be read together: no single number tells the whole story, and each one has
+a different weakness (self-play exaggerates gains, Stockfish at reduced strength compresses them, online ratings are
+noisy, and speed says nothing about strength by itself).
 
 ### Elo gained by each version
 
@@ -148,7 +182,18 @@ gains measured against the immediately previous version do not add up linearly; 
 </picture>
 
 Every version improved on the previous one; the largest single gains came from quiescence search (v4) and from the
-evaluation rework (v10). v6 and v9 are positive but their intervals include zero.
+evaluation rework (v10). v6 and v9 are positive but their intervals include zero, so for those two the data support
+"probably better" but do not prove it at 95%.
+
+The shape of the chart has a story. Quiescence search (+195) fixed the horizon effect, where the engine misjudged
+positions in the middle of a capture sequence, so it was the cheapest big win. Then the gains settle at +30 to +70
+per step, the typical return of search refinements. v10 breaks the pattern: with the search in decent shape, the
+evaluation became the bottleneck, and teaching the engine about king safety, passed pawns and endgames paid
+more than any single search feature since v4.
+
+Chaining the steps gives roughly +600 Elo from v3 to v10, but that figure should be read as an upper estimate:
+each match is played against the previous version, so gains are partly specific to that opponent, errors add up,
+and self-play tends to exaggerate improvements (see the Stockfish comparison below).
 
 ### Search depth: stronger without searching deeper
 
@@ -173,6 +218,14 @@ Against an external engine the progress is smaller than in self-play: v6-v10 all
 within each other's error margins. Limited Stockfish loses mainly through tactical errors, which a deeper search
 exploits better than a refined evaluation; this motivates the next versions (faster move generation, transposition table).
 
+This is the most important caveat of the whole project: the +135 Elo of v10 is a self-play result, and against
+Stockfish the same step is worth only a few points (v8 at 54.5% to v10 at 55.5%, well inside the margin of
+about ±67 Elo). My interpretation, not proven by these data, is that self-play favours changes that fix specific
+weaknesses of the previous version (such as unconverted endgames), while a different opponent exposes
+different weaknesses, mostly tactical ones. Two further cautions: Stockfish's `UCI_Elo` scale is calibrated at
+longer time controls, so at 10+0.1 the levels are compressed and "Elo 2000" is only a rough reference; and in
+the v7 and v8 matches Stockfish lost 5 and 3 games on time, which slightly inflates those scores (marked with * in the chart).
+
 ### Lichess
 
 <picture>
@@ -184,13 +237,37 @@ Bullet rating rose from 1808 (v4) to 1963 (v10) in six days of play against othe
 Online ratings are noisy (opponent pool, network latency, time controls) and complement the controlled matches above;
 they do not replace them.
 
+The Lichess curve is consistent with the matches (bullet +155 points from v4 to v10) but it is weaker evidence:
+the opponents change from day to day, many are other bots, the rating was still moving at the time of writing,
+and the bot loses roughly 0.5-1.3 s per move to network lag outside the engine in 30+0 games, which is why very
+short time controls without increment are avoided. Blitz rose less (1689 to 1751, +62 points); I have not
+investigated why, so I do not draw a conclusion from the difference.
+
 ### Node throughput (NPS) and time to depth
 
-<!-- PLACEHOLDER: NPS and time to depth for every version (bin/engine_v*.exe) on the same positions,
-     measured with nothing else running (tools/bench_versions.py). Planned chart: docs/images/nps_per_version_*.png -->
-*Placeholder: nodes per second and time to reach depth 6 for each version, measured on the same positions on an idle machine.*
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/nps_per_version_dark.png">
+  <img alt="Nodes per second at depth 6, version by version" src="docs/images/nps_per_version_light.png">
+</picture>
 
-Current figure (v10, single thread, Intel i5 10th gen laptop): about 1.0-1.3 M nodes/s in the middlegame.
+Every version searched the same 6 standard test positions to a fixed depth of 6, single thread, on the same
+Intel i5 10th gen laptop with nothing else running. Each measurement is the fastest of 3 runs, which is the one
+least disturbed by the operating system.
+
+- **v5 to v9: flat at about 2.0-2.1 M nodes/s.** Killer moves, check extension, Zobrist hashing and time management
+  do not slow the search loop. v7, v8 and v9 visit exactly the same nodes at fixed depth, as expected, since time
+  management does not change the tree.
+- **v10: 1.45 M nodes/s (-32%), 55% more time to reach depth 6.** The tree is only about 5% larger, so the cost is per
+  node: tapered evaluation, king safety and pawn structure run in every evaluation. The slowdown is largest in
+  middlegames (-31% to -36%) and small in the endgame position (-10%), where king safety is skipped. This matches the
+  ~0.3 ply loss in the depth chart above, which v10's evaluation more than repays (+135 Elo vs v9).
+- **Speed is the next target.** The sliding-piece attacks still use ray loops; magic bitboards, captures-only move
+  generation for quiescence and lazy move ordering (v11) should win back most of the loss.
+
+Caveats: these are fixed-depth figures on 6 positions, so they are not the same as the in-game speed (about 1.0-1.3 M
+nodes/s in the middlegame). v3 and v4 do not report node counts and search different trees (v3 has no quiescence),
+so they are left out of the chart. Positions that finish in under 100 ms (pos3, pos4 at v5-v9) are noisy individually,
+which is why the chart uses totals over all 6 positions.
 
 ### Basic endgames: v9 vs v10.1
 
