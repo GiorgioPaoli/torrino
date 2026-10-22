@@ -5,9 +5,9 @@
 uint64_t pawnAttacks[COLOR_NB][64];
 uint64_t knightAttacks[64];
 uint64_t kingAttacks[64];
-uint64_t bishopAttacks[64];
-uint64_t rookAttacks[64];
-uint64_t queenAttacks[64];
+uint64_t bishopEmptyAttacks[64];
+uint64_t rookEmptyAttacks[64];
+uint64_t queenEmptyAttacks[64];
 
 void initPawnAttacks(){
     for (int sq = 0; sq < 64; sq++){
@@ -48,6 +48,16 @@ uint64_t knightAttacksFromSquare(uint64_t sq){
 void initKingAttacks(){
     for (int sq = 0; sq < 64; sq++){
         kingAttacks[sq] = kingAttacksFromSquare(sq);
+    }
+}
+
+// attacks of sliding pieces on an EMPTY board, used as a fast pre-filter:
+// if a piece doesn't reach a square even on an empty board, it can't reach it with pieces in between
+void initSliderMasks(){
+    for (int sq = 0; sq < 64; sq++){
+        bishopEmptyAttacks[sq] = bishopAttacksSlow(sq, 0ULL);
+        rookEmptyAttacks[sq]   = rookAttacksSlow(sq, 0ULL);
+        queenEmptyAttacks[sq]  = bishopEmptyAttacks[sq] | rookEmptyAttacks[sq];
     }
 }
 

@@ -19,10 +19,10 @@ extern uint64_t kingAttacks[64];
     VENGONO CALCOLATE QUNADO SERVE, NON VENGONO INIZIALIZZATE PER ORA 
 */
 
-// Questa è la versione ingenua
-extern uint64_t bishopAttacks[64];
-extern uint64_t rookAttacks[64];
-extern uint64_t queenAttacks[64];
+// arrays for pieces attacks on an EMPTY board
+extern uint64_t bishopEmptyAttacks[64];
+extern uint64_t rookEmptyAttacks[64];
+extern uint64_t queenEmptyAttacks[64];
 
 
 // --- FUNZIONI INIZIALIZZAZIONE ---
@@ -31,6 +31,8 @@ void initKnightAttacks();
 uint64_t knightAttacksFromSquare(uint64_t sq);
 void initKingAttacks();
 uint64_t kingAttacksFromSquare(uint64_t sq);
+
+void initSliderMasks();     // fills bishopAttacks/rookAttacks/queenAttacks with empty-board attacks
 
 uint64_t bishopAttacksSlow(int sq, uint64_t occupancy);
 uint64_t rookAttacksSlow(int sq, uint64_t occupancy);

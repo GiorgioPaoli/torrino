@@ -11,6 +11,21 @@ constexpr int PIECE_WEIGHTS[PIECE_TYPE_NB] = {
     0       // KING
 };
 
+// --- king safety (middlegame only) ---
+constexpr int CASTLING_RIGHT_BONUS    = 10;     // per castling right still available (king on its start square)
+constexpr int KING_MOVED_PENALTY      = 40;     // king left its start square without castling
+constexpr int SHIELD_RANK2_BONUS      = 15;     // shield pawn on its starting rank
+constexpr int SHIELD_RANK3_BONUS      = 8;      // shield pawn pushed by one square
+constexpr int SHIELD_MISSING_PENALTY  = 20;     // no shield pawn on that file
+constexpr int EXPOSED_KING_PER_RANK   = 30;     // per rank beyond the 2nd while the enemy queen is on the board
+constexpr int KING_SAFETY_MIN_PHASE   = 6;        // below this phase king safety is skipped (its middlegame weight is tiny)
+
+// weights of the pieces attacking the zone around the king
+constexpr int KNIGHT_ATTACK_WEIGHT = 2;
+constexpr int BISHOP_ATTACK_WEIGHT = 2;
+constexpr int ROOK_ATTACK_WEIGHT   = 3;
+constexpr int QUEEN_ATTACK_WEIGHT  = 5;
+
 /*
     Piece Square Tables
 
@@ -108,9 +123,17 @@ constexpr const int *PST[PIECE_TYPE_NB] = {
     PAWN_PST, KNIGHT_PST, BISHOP_PST, ROOK_PST, QUEEN_PST, MG_KING_PST
 };
 
+
+
 int doublePawnPenalty(Board &board);
 int countPieces(Board &board);
 int centerDistance(int sq);
 int kingDistance(int sq1, int sq2);
+int castlingSafety(Board &board, int sqw, int sqb);             // small bonus per right to castle, king in no castling positoin -> small penalty
+int pawnShield(Board &board, Color side, int kingSq);           // pawn shield, if the kings on first rank and its castled, for each own pawn on 2nd and 3rd rank bonus, elsewhere -> penalty
+int exposedKing(Board &board, Color side, int kingSq);          // if the opponent still has a queen and the side king is not on 1st rank -> penalty that increase as ranks go on
+int kingAttack(Board &board, Color side, int kingSq);
+
+
 
 int evaluate(Board &board);

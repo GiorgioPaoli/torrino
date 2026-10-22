@@ -2,6 +2,7 @@
 #include "eval.h"
 #include "bitboard.h"
 #include "search.h"
+#include "attacks.h"
 
 // restituisce una penalita per ogni doubled pawn
 int doublePawnPenalty(Board &board){
@@ -57,6 +58,120 @@ int kingDistance(int sq1, int sq2){
     int rankDiff = abs(rankOf(sq1) - rankOf(sq2));
     return fileDiff + rankDiff;
 }
+
+// castling score for ONE side: bonus while it can still castle, penalty if the king moved without castling
+static int castlingScore(Board &board, Color side, int kingSq) {
+    int startSq = (side == WHITE) ? E1 : E8;
+
+    if (kingSq == startSq) {
+        // castling rights: bits 0-1 are white's (K, Q), bits 2-3 are black's (k, q)
+        int firstBit = (side == WHITE) ? 0 : 2;
+        int rights = getBitInt(board.castlingRights, firstBit) + getBitInt(board.castlingRights, firstBit + 1);
+        return rights * CASTLING_RIGHT_BONUS;
+    }
+
+    // castled king (g/c) or one step further into the corner (h/b): safe, no penalty
+    bool castled = (side == WHITE)
+        ? (kingSq == G1 || kingSq == H1 || kingSq == C1 || kingSq == B1)
+        : (kingSq == G8 || kingSq == H8 || kingSq == C8 || kingSq == B8);
+    if (castled) return 0;
+
+    // anywhere else (f1, d1, or off the back rank): the king moved and castling is lost
+    return -KING_MOVED_PENALTY;
+}
+
+// white minus black
+int castlingSafety(Board &board, int sqw, int sqb) {
+    return castlingScore(board, WHITE, sqw) - castlingScore(board, BLACK, sqb);
+}
+
+
+// pawn shield in front of a king castled on a wing, for ONE side
+int pawnShield(Board &board, Color side, int kingSq) {
+    int homeRank = (side == WHITE) ? 0 : 7;
+    if (rankOf(kingSq) != homeRank) return 0;            // only for a king on its back rank
+
+    int file = fileOf(kingSq);
+    int firstFile;
+    if (file >= 5)      firstFile = 5;                    // kingside: files f, g, h
+    else if (file <= 2) firstFile = 0;                    // queenside: files a, b, c
+    else return 0;                                        // king in the centre: handled by castlingSafety
+
+    uint64_t pawns    = board.pieceBB[side][PAWN];
+    uint64_t rankNear = (side == WHITE) ? RANK_2 : RANK_7;  // pawn still on its starting square
+    uint64_t rankFar  = (side == WHITE) ? RANK_3 : RANK_6;  // pawn pushed by one square
+
+    int score = 0;
+    for (int f = firstFile; f < firstFile + 3; f++) {
+        if (pawns & FILE_MASKS[f] & rankNear)      score += SHIELD_RANK2_BONUS;
+        else if (pawns & FILE_MASKS[f] & rankFar)  score += SHIELD_RANK3_BONUS;
+        else                                       score -= SHIELD_MISSING_PENALTY;
+    }
+    return score;
+}
+
+// penalty for a king that walked up the board while the enemy queen is still alive, for ONE side
+int exposedKing(Board &board, Color side, int kingSq) {
+    Color them = opposite(side);
+    if (board.pieceBB[them][QUEEN] == 0) return 0;
+
+    // how many ranks the king has advanced from its back rank (0 = back rank)
+    int advanced = (side == WHITE) ? rankOf(kingSq) : 7 - rankOf(kingSq);
+    if (advanced <= 1) return 0;                          // 1st and 2nd rank are fine
+
+    return -EXPOSED_KING_PER_RANK * (advanced - 1);
+}
+
+// enemy pieces attacking the squares around the king of `side`; grows quadratically with the attack
+int kingAttack(Board &board, Color side, int kingSq) {
+    Color them = opposite(side);
+
+    uint64_t enemyPieces = board.pieceBB[them][KNIGHT] | board.pieceBB[them][BISHOP]
+                         | board.pieceBB[them][ROOK]   | board.pieceBB[them][QUEEN];
+    if (popcount(enemyPieces) < 2) return 0;
+
+    uint64_t zone = kingAttacks[kingSq];                  // the 8 squares around the king
+    uint64_t occ  = board.occupiedAll;
+
+    int attackerCount = 0;
+    int attackWeight  = 0;
+
+    uint64_t bb = board.pieceBB[them][KNIGHT];
+    while (bb) {
+        int sq = popLsb(bb);
+        if (knightAttacks[sq] & zone) { attackerCount++; attackWeight += KNIGHT_ATTACK_WEIGHT; }
+    }
+    // sliders: cheap empty-board check first, slow exact check only if the piece is lined up with the zone
+    bb = board.pieceBB[them][BISHOP];
+    while (bb) {
+        // first checks the EMPTY attacks, if the piece can attack the king, then it computes the function
+        int sq = popLsb(bb);
+        if ((bishopEmptyAttacks[sq] & zone) && (bishopAttacksSlow(sq, occ) & zone)) {
+            attackerCount++; attackWeight += BISHOP_ATTACK_WEIGHT;
+        }
+    }
+    bb = board.pieceBB[them][ROOK];
+    while (bb) {
+        int sq = popLsb(bb);
+        if ((rookEmptyAttacks[sq] & zone) && (rookAttacksSlow(sq, occ) & zone)) {
+            attackerCount++; attackWeight += ROOK_ATTACK_WEIGHT;
+        }
+    }
+    bb = board.pieceBB[them][QUEEN];
+    while (bb) {
+        int sq = popLsb(bb);
+        if ((queenEmptyAttacks[sq] & zone) && (queenAttacksSlow(sq, occ) & zone)) {
+            attackerCount++; attackWeight += QUEEN_ATTACK_WEIGHT;
+        }
+    }
+
+    // a single attacker is rarely dangerous; with 2+ the danger grows quickly
+    if (attackerCount < 2) return 0;
+    return -(attackWeight * attackWeight);
+}
+
+
+
 
 int evaluate(Board &board) {
     int mg = 0; // middlegame
@@ -135,6 +250,14 @@ int evaluate(Board &board) {
         eg -= bonus;
     } 
     
+    // king safety: middlegame only, it fades out automatically as pieces come off
+    if (phase >= KING_SAFETY_MIN_PHASE) {
+        mg += castlingSafety(board, sqw, sqb);
+        mg += pawnShield(board, WHITE, sqw)  - pawnShield(board, BLACK, sqb);
+        mg += exposedKing(board, WHITE, sqw) - exposedKing(board, BLACK, sqb);
+        mg += kingAttack(board, WHITE, sqw)  - kingAttack(board, BLACK, sqb);
+    }
+
     int score = (mg * phase + eg * (24 - phase)) / 24;
 
     return (board.sideToMove == WHITE) ? score : -score;

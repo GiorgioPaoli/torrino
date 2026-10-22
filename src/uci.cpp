@@ -11,9 +11,10 @@
 
 void uciLoop(){
     Board board;
-    board.initBoard();
     initZobrist();
     initPawnAttacks(); initKnightAttacks(); initKingAttacks();
+    initSliderMasks();
+    board.initBoard();
 
     std::string line;
     while (std::getline(std::cin, line)){

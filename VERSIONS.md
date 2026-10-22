@@ -160,11 +160,56 @@ Known issue: at 3+1 the formula is too front-loaded (10-15 s per move in the mid
 
 
 ### Lichess (bot: TorrinoBOT)
-Online from: 20-10-2026   to: - 21-10-2026
+Online from: 20-10-2026   to: 21-10-2026
 | Category | Starting rating | Final rating | Games | Results W-L-D |
 |----------|-----------------|--------------|-------|---------------|
 | Bullet   | 1894            | 1948 (+54)   | 63    | 33 - 21 - 9   |
 | Blitz    | 1748            | 1753 (+5)    | 26    | 9 - 12 - 5    |
 
 Notes: opening book off (same as previous versions), concurrency 2 (1 reserved for humans)
+
+
+
+## v10 - 
+### v10.1 - Tapered evaluation + mop-up
+- Game phase from remaining pieces (N=1, B=1, R=2, Q=4; 24 = opening, 0 = endgame);
+  middlegame and endgame scores blended by phase
+- King: MG table in the middlegame, EG table (centralisation) in the endgame
+- Development and early-queen penalties: middlegame only
+- Mop-up (endgame, piece-material advantage ≥ 400): push the losing king to the corner,
+  bring the kings together
+
+| Opponent | TC     | Games | Results W-L-D | Elo       |
+|----------|--------|-------|---------------|-----------|
+| v9       | 10+0.1 | 100   | 51 - 17 - 32  | +123 ± 59 |
+
+Evaluation unchanged in the opening/middlegame, symmetric on all test positions.
+Remaining draws vs v9: 13 by the fifty-move rule, 11 by insufficient material, 8 by repetition.
+Known limit: aimless shuffling in roughly equal endgames (no plan beyond the search depth).
+
+### v10.2 - King safety (middlegame only)
+- Castling: bonus per castling right while the king is on its start square,
+  penalty if the king moved without castling (castled = g/h or b/c file on the back rank)
+- Pawn shield: for a king castled on a wing, bonus for each pawn on the 2nd/3rd rank of the
+  three files in front of it, penalty for each missing one
+- Exposed king: penalty per rank beyond the 2nd while the enemy queen is on the board
+- King attack: enemy pieces attacking the 8 squares around the king (N=2, B=2, R=3, Q=5);
+  with 2+ attackers, penalty = weight²
+
+Checks:
+- Start position still 0, symmetric on all test positions
+- Castled king vs king on f1 without castling: 60 cp apart (was 20 in v10.1)
+- GroshBoss position before 39.f4: v10.1 plays f3f4 (the game blunder), v10.2 plays Kg1
+- Speed: ~30% fewer nodes per second (kiwipete 1.42M → 0.99M nps), same node count per depth
+
+| Opponent | TC     | Games | Results W-L-D | Elo       |
+|----------|--------|-------|---------------|-----------|
+| v10.1    | 10+0.1 | 100   | 45 - 30 - 25  | +53 ± 60  |
+
+Result: +53 ± 60 Elo vs v10.1 (LOS 95.8%) despite ~30% lower NPS.
+The new funcionts in v10.2 call many tames the slow attack tables, and they are computed every time 
+they're called, making the NPS ~30% slower, but the loss is balanced by the better search.
+
+
+
 
