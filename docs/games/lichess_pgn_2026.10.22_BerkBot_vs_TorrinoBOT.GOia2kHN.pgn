@@ -1,0 +1,26 @@
+[Event "rated bullet game"]
+[Site "https://lichess.org/game/GOia2kHN"]
+[Date "2026.10.22"]
+[Round "-"]
+[White "BerkBot"]
+[Black "TorrinoBOT"]
+[Result "1-0"]
+[GameId "GOia2kHN"]
+[UTCDate "2026.10.22"]
+[UTCTime "18:58:35"]
+[WhiteElo "2224"]
+[BlackElo "1967"]
+[WhiteRatingDiff "+2"]
+[BlackRatingDiff "-2"]
+[WhiteTitle "BOT"]
+[BlackTitle "BOT"]
+[Variant "Standard"]
+[TimeControl "60+2"]
+[ECO "D06"]
+[Opening "Queen's Gambit"]
+[Termination "Normal"]
+[Annotator "lichess.org"]
+
+1. d4 { [%clk 0:01:00] } 1... d5 { [%clk 0:01:00] } 2. c4 { [%clk 0:01:02] } { D06 Queen's Gambit } 2... Be6 { [%clk 0:01:00] } 3. cxd5 { [%clk 0:01:00] } 3... Bxd5 { [%clk 0:01:00] } 4. Nc3 { [%clk 0:00:58] } 4... Nf6 { [%clk 0:01:00] } 5. e3 { [%clk 0:00:56] } 5... e6 { [%clk 0:00:58] } 6. Nf3 { [%clk 0:00:54] } 6... Bb4 { [%clk 0:00:57] } 7. Bd3 { [%clk 0:00:53] } 7... Bxc3+ { [%clk 0:00:57] } 8. bxc3 { [%clk 0:00:51] } 8... Nc6 { [%clk 0:00:57] } 9. Ba3 { [%clk 0:00:49] } 9... e5 { [%clk 0:00:57] } 10. Nxe5 { [%clk 0:00:48] } 10... Nxe5 { [%clk 0:00:56] } 11. dxe5 { [%clk 0:00:47] } 11... Nd7 { [%clk 0:00:55] } 12. Qg4 { [%clk 0:00:45] } 12... g6 { [%clk 0:00:54] } 13. Qg3 { [%clk 0:00:44] } 13... c5 { [%clk 0:00:55] } 14. O-O { [%clk 0:00:43] } 14... Qa5 { [%clk 0:00:55] } 15. Bb2 { [%clk 0:00:42] } 15... c4 { [%clk 0:00:55] } 16. Bc2 { [%clk 0:00:41] } 16... Be6 { [%clk 0:00:54] } 17. f4 { [%clk 0:00:40] } 17... Rb8 { [%clk 0:00:53] } 18. Rf2 { [%clk 0:00:39] } 18... Bd5 { [%clk 0:00:53] } 19. f5 { [%clk 0:00:38] } 19... gxf5 { [%clk 0:00:49] } 20. Bxf5 { [%clk 0:00:37] } 20... Be6 { [%clk 0:00:46] } 21. Bxe6 { [%clk 0:00:36] } 21... fxe6 { [%clk 0:00:46] } 22. Qg7 { [%clk 0:00:35] } 22... Qxe5 { [%clk 0:00:41] } 23. Qf7+ { [%clk 0:00:35] } 23... Kd8 { [%clk 0:00:43] } 24. Rd1 { [%clk 0:00:34] } 24... Qb5 { [%clk 0:00:41] } 25. Rfd2 { [%clk 0:00:33] } 25... Kc8 { [%clk 0:00:42] } 26. Rxd7 { [%clk 0:00:33] } 26... Ra8 { [%clk 0:00:40] } 27. Qxe6 { [%clk 0:00:32] } 27... Qc6 { [%clk 0:00:41] } 28. R1d6 { [%clk 0:00:31] } 28... Qxd7 { [%clk 0:00:40] } 29. Rxd7 { [%clk 0:00:31] } 29... Rd8 { [%clk 0:00:38] } 30. Rxh7+ { [%clk 0:00:30] } 30... Kb8 { [%clk 0:00:34] } 31. Qe5+ { [%clk 0:00:32] } 31... Rd6 { [%clk 0:00:35] } 32. Qxd6+ { [%clk 0:00:34] } 32... Kc8 { [%clk 0:00:37] } 33. Qc7# { [%clk 0:00:34] } { White wins by checkmate. } 1-0
+
+

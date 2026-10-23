@@ -1,0 +1,26 @@
+[Event "rated bullet game"]
+[Site "https://lichess.org/game/p7Y1QbLx"]
+[Date "2026.10.22"]
+[Round "-"]
+[White "Axiom_BOT"]
+[Black "TorrinoBOT"]
+[Result "0-1"]
+[GameId "p7Y1QbLx"]
+[UTCDate "2026.10.22"]
+[UTCTime "23:03:01"]
+[WhiteElo "2083"]
+[BlackElo "1961"]
+[WhiteRatingDiff "-8"]
+[BlackRatingDiff "+8"]
+[WhiteTitle "BOT"]
+[BlackTitle "BOT"]
+[Variant "Standard"]
+[TimeControl "60+1"]
+[ECO "A06"]
+[Opening "Zukertort Opening"]
+[Termination "Normal"]
+[Annotator "lichess.org"]
+
+1. Nf3 { [%clk 0:01:00] } 1... d5 { [%clk 0:01:00] } { A06 Zukertort Opening } 2. e3 { [%clk 0:00:59] } 2... Nd7 { [%clk 0:00:58] } 3. d4 { [%clk 0:00:59] } 3... e6 { [%clk 0:00:57] } 4. c4 { [%clk 0:00:59] } 4... Ngf6 { [%clk 0:00:55] } 5. Bd3 { [%clk 0:00:58] } 5... Bb4+ { [%clk 0:00:55] } 6. Nbd2 { [%clk 0:00:57] } 6... O-O { [%clk 0:00:54] } 7. a3 { [%clk 0:00:57] } 7... Bd6 { [%clk 0:00:50] } 8. Qc2 { [%clk 0:00:57] } 8... b6 { [%clk 0:00:46] } 9. e4 { [%clk 0:00:56] } 9... dxe4 { [%clk 0:00:45] } 10. Nxe4 { [%clk 0:00:55] } 10... Bb7 { [%clk 0:00:43] } 11. Bg5 { [%clk 0:00:55] } 11... h6 { [%clk 0:00:41] } 12. Bxf6 { [%clk 0:00:55] } 12... Nxf6 { [%clk 0:00:39] } 13. Rd1 { [%clk 0:00:54] } 13... c5 { [%clk 0:00:38] } 14. Nxf6+ { [%clk 0:00:53] } 14... Qxf6 { [%clk 0:00:38] } 15. Bh7+ { [%clk 0:00:53] } 15... Kh8 { [%clk 0:00:39] } 16. Be4 { [%clk 0:00:53] } 16... Bxe4 { [%clk 0:00:37] } 17. Qxe4 { [%clk 0:00:52] } 17... cxd4 { [%clk 0:00:36] } 18. Nxd4 { [%clk 0:00:51] } 18... Be5 { [%clk 0:00:35] } 19. b3 { [%clk 0:00:51] } 19... Rad8 { [%clk 0:00:34] } 20. Nf3 { [%clk 0:00:51] } 20... Rxd1+ { [%clk 0:00:33] } 21. Kxd1 { [%clk 0:00:50] } 21... Bg3 { [%clk 0:00:32] } 22. Re1 { [%clk 0:00:49] } 22... Bxf2 { [%clk 0:00:31] } 23. Rf1 { [%clk 0:00:47] } 23... Qa1+ { [%clk 0:00:30] } 24. Ke2 { [%clk 0:00:44] } 24... Qb2+ { [%clk 0:00:30] } 25. Nd2 { [%clk 0:00:42] } 25... Bc5 { [%clk 0:00:27] } 26. Rb1 { [%clk 0:00:39] } 26... Qxa3 { [%clk 0:00:24] } 27. Qc2 { [%clk 0:00:37] } 27... Qa5 { [%clk 0:00:24] } 28. Nf3 { [%clk 0:00:34] } 28... Bd6 { [%clk 0:00:24] } 29. Rd1 { [%clk 0:00:32] } 29... Rd8 { [%clk 0:00:24] } 30. Qd2 { [%clk 0:00:32] } 30... Qf5 { [%clk 0:00:23] } 31. b4 { [%clk 0:00:31] } 31... Qg4 { [%clk 0:00:23] } 32. Qe3 { [%clk 0:00:29] } 32... Qxc4+ { [%clk 0:00:22] } 33. Kf2 { [%clk 0:00:27] } 33... Bg3+ { [%clk 0:00:19] } 34. Kxg3 { [%clk 0:00:24] } 34... Rxd1 { [%clk 0:00:18] } 35. Kh3 { [%clk 0:00:22] } 35... Qxb4 { [%clk 0:00:17] } 36. Kg3 { [%clk 0:00:20] } 36... Qe7 { [%clk 0:00:17] } 37. h3 { [%clk 0:00:20] } 37... Kg8 { [%clk 0:00:15] } 38. Kh2 { [%clk 0:00:19] } 38... Rd5 { [%clk 0:00:15] } 39. Qc1 { [%clk 0:00:19] } 39... Qd6+ { [%clk 0:00:15] } 40. g3 { [%clk 0:00:17] } 40... Rc5 { [%clk 0:00:15] } 41. Qe3 { [%clk 0:00:16] } 41... Rc2+ { [%clk 0:00:15] } 42. Kg1 { [%clk 0:00:14] } 42... Qxg3+ { [%clk 0:00:15] } 43. Kf1 { [%clk 0:00:13] } 43... Qg2+ { [%clk 0:00:16] } 44. Ke1 { [%clk 0:00:11] } 44... Ra2 { [%clk 0:00:15] } 45. Qd2 { [%clk 0:00:09] } 45... Ra1+ { [%clk 0:00:15] } 46. Qd1 { [%clk 0:00:08] } 46... Qh1+ { [%clk 0:00:15] } 47. Kf2 { [%clk 0:00:07] } 47... Rxd1 { [%clk 0:00:16] } 48. Ke3 { [%clk 0:00:05] } 48... Qxh3 { [%clk 0:00:16] } 49. Ke2 { [%clk 0:00:05] } 49... Qf1+ { [%clk 0:00:16] } 50. Ke3 { [%clk 0:00:06] } 50... Rd3+ { [%clk 0:00:16] } 51. Kf4 { [%clk 0:00:07] } 51... Qxf3+ { [%clk 0:00:15] } 52. Ke5 { [%clk 0:00:08] } 52... Rd5# { [%clk 0:00:14] } { Black wins by checkmate. } 0-1
+
+
