@@ -12,7 +12,7 @@
      Save it as docs/gifs/hero.gif (replacing the current static image). -->
 <p align="center"><img src="docs/gifs/hero.gif" width="360" alt="TorrinoBOT playing a game on Lichess"></p>
 
-Torrino plays online as **[TorrinoBOT](https://lichess.org/@/TorrinoBOT)** (bullet 1963, blitz 1751 as of October 22, 2026).
+Torrino plays online as **[TorrinoBOT](https://lichess.org/@/TorrinoBOT)** (bullet 2007, blitz 1771 as of October 23, 2026).
 Every change is first verified for correctness and then measured in engine-vs-engine matches;
 the complete log of changes and results is in **[VERSIONS.md](VERSIONS.md)**.
 
@@ -20,17 +20,14 @@ the complete log of changes and results is in **[VERSIONS.md](VERSIONS.md)**.
 
 ## Highlights
 
-- **Measured, incremental development.** Each version was tested in a 100-game match against the previous one
-  (cutechess-cli, balanced openings, colours swapped). The latest step, **v10 vs v9: +135 ± 69 Elo**
-  (95% confidence interval; 62 wins, 25 losses, 13 draws).
-- **Correctness by construction.** Move generation matches the reference **perft** counts on the 6 standard test
-  positions; every evaluation change is checked for colour symmetry; speed optimisations are checked to leave the
-  search unchanged (identical node counts at fixed depth).
-- **Evaluation driven by real games.** Weaknesses found in Lichess games (king safety, passed pawns, unconverted
-  endgames) were reproduced as test positions, fixed and re-measured: v10 gained **+135 Elo** over v9 while searching
-  *less* deep (5.2 vs 5.5 plies on average).
-- **Strength against an external reference:** 55.5% (+38 ± 67 Elo) against Stockfish limited to `UCI_Elo` 2000
-  in 100 games at 10+0.1.
+- **A complete chess engine, written from scratch in C++17.** Bitboard board representation, legal move generation,
+  alpha-beta search with iterative deepening and quiescence search, and a hand-crafted evaluation. No chess libraries.
+- **Speaks UCI.** It works with any UCI graphical interface (cutechess, En Croissant, Arena) and plays online as the
+  Lichess bot TorrinoBOT.
+- **Evaluation with chess knowledge.** Piece-square tables blended between middlegame and endgame, king safety, pawn
+  structure (passed, isolated, doubled pawns) and a rule for mating with king and rook or queen.
+- **Built to be checked.** Move generation is verified with perft, every change is tested in engine-vs-engine matches,
+  and the whole development history is documented version by version ([Results](#results)).
 
 ---
 
