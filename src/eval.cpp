@@ -3,6 +3,7 @@
 #include "bitboard.h"
 #include "search.h"
 #include "attacks.h"
+#include "magics.h"
 
 // restituisce una penalita per ogni doubled pawn
 int doublePawnPenalty(Board &board){
@@ -221,21 +222,21 @@ int kingAttack(Board &board, Color side, int kingSq) {
     while (bb) {
         // first checks the EMPTY attacks, if the piece can attack the king, then it computes the function
         int sq = popLsb(bb);
-        if ((bishopEmptyAttacks[sq] & zone) && (bishopAttacksSlow(sq, occ) & zone)) {
+        if ((bishopEmptyAttacks[sq] & zone) && (bishopAttacks(sq, occ) & zone)) {
             attackerCount++; attackWeight += BISHOP_ATTACK_WEIGHT;
         }
     }
     bb = board.pieceBB[them][ROOK];
     while (bb) {
         int sq = popLsb(bb);
-        if ((rookEmptyAttacks[sq] & zone) && (rookAttacksSlow(sq, occ) & zone)) {
+        if ((rookEmptyAttacks[sq] & zone) && (rookAttacks(sq, occ) & zone)) {
             attackerCount++; attackWeight += ROOK_ATTACK_WEIGHT;
         }
     }
     bb = board.pieceBB[them][QUEEN];
     while (bb) {
         int sq = popLsb(bb);
-        if ((queenEmptyAttacks[sq] & zone) && (queenAttacksSlow(sq, occ) & zone)) {
+        if ((queenEmptyAttacks[sq] & zone) && (queenAttacks(sq, occ) & zone)) {
             attackerCount++; attackWeight += QUEEN_ATTACK_WEIGHT;
         }
     }

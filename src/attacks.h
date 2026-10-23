@@ -15,6 +15,7 @@ extern uint64_t kingAttacks[64];
 // Sliding Pieces
 // --- DA FARE: MAGIC BITBOARDS ---
 
+
 /*
     VENGONO CALCOLATE QUNADO SERVE, NON VENGONO INIZIALIZZATE PER ORA 
 */
@@ -37,3 +38,8 @@ void initSliderMasks();     // fills bishopAttacks/rookAttacks/queenAttacks with
 uint64_t bishopAttacksSlow(int sq, uint64_t occupancy);
 uint64_t rookAttacksSlow(int sq, uint64_t occupancy);
 uint64_t queenAttacksSlow(int sq, uint64_t occupancy);
+
+// squares whose occupancy can change a slider's attacks (board edges excluded); used by the magic bitboards
+uint64_t rookRelevantMask(int sq);
+uint64_t bishopRelevantMask(int sq);
+

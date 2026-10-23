@@ -2,6 +2,7 @@
 #include "board.h"
 #include "attacks.h"
 #include "zobrist.h"
+#include "magics.h"
 
 // chiama dentro di se updateOccupancy e syncMailboxFromBitboards
 void Board::initBoard(){
@@ -408,8 +409,8 @@ bool Board::isSquareAttacked(int square, Color bySide){
     if(pawnAttacks[opp][square] & pieceBB[bySide][PAWN]) return true;
     if(knightAttacks[square] & pieceBB[bySide][KNIGHT]) return true;
     if(kingAttacks[square] & pieceBB[bySide][KING]) return true;
-    if(bishopAttacksSlow(square, occupiedAll) & (pieceBB[bySide][BISHOP] | pieceBB[bySide][QUEEN])) return true;
-    if(rookAttacksSlow(square, occupiedAll) & (pieceBB[bySide][ROOK] | pieceBB[bySide][QUEEN])) return true;
+    if(bishopAttacks(square, occupiedAll) & (pieceBB[bySide][BISHOP] | pieceBB[bySide][QUEEN])) return true;
+    if(rookAttacks(square, occupiedAll) & (pieceBB[bySide][ROOK] | pieceBB[bySide][QUEEN])) return true;
     return false;
 }
 

@@ -60,7 +60,7 @@ int quiescence(Board &board, int alpha, int beta){
 
 int negamax(Board &board, int depth, int alpha, int beta, int ply){
     nodesCount++;
-    // questi due sono stop per il time management
+    // time management
     if ((nodesCount & 2047) == 0) {
         if (steady_clock::now() > deadline) stopSearch = true;
     }

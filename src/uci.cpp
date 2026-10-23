@@ -6,6 +6,7 @@
 #include "search.h"
 #include "attacks.h"
 #include "zobrist.h"
+#include "magics.h"
 #include "uci.h"
 
 
@@ -14,6 +15,7 @@ void uciLoop(){
     initZobrist();
     initPawnAttacks(); initKnightAttacks(); initKingAttacks();
     initSliderMasks();
+    initMagics();
     initPawnMasks();
     board.initBoard();
 
@@ -24,7 +26,7 @@ void uciLoop(){
         iss >> token;                     // prima parola = il comando
 
         if (token == "uci"){
-            std::cout << "id name Torrino v10\n";
+            std::cout << "id name Torrino v11\n";
             std::cout << "id author Giorgio\n";
             std::cout << "uciok" << std::endl;
         }

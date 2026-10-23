@@ -1,5 +1,6 @@
 #include "movegen.h"
 #include "attacks.h"
+#include "magics.h"
 
 // ORDINE IMPORTANTE !!!! Aggiunge prima la promozione di regina
 void generatePawnMoves(Board &board, MoveList &list, Color us){
@@ -76,6 +77,7 @@ void generateKnightMoves(Board &board, MoveList &list, Color us){
     }
 }
 
+// Now uses Macig Bitboards
 void generateBishopMoves(Board &board, MoveList &list, Color us){
     Color them = opposite(us);
     uint64_t bishops = board.pieceBB[us][BISHOP];
@@ -83,7 +85,7 @@ void generateBishopMoves(Board &board, MoveList &list, Color us){
     while (bishops) {
         int from = popLsb(bishops);
 
-        uint64_t attacks = bishopAttacksSlow(from, board.occupiedAll);
+        uint64_t attacks = bishopAttacks(from, board.occupiedAll);
         attacks &= ~board.occupiedByColor[us];
 
         while (attacks) {
@@ -103,7 +105,7 @@ void generateRookMoves(Board &board, MoveList &list, Color us){
     while (rooks) {
         int from = popLsb(rooks);
 
-        uint64_t attacks = rookAttacksSlow(from, board.occupiedAll);
+        uint64_t attacks = rookAttacks(from, board.occupiedAll);
         attacks &= ~board.occupiedByColor[us];
 
         while (attacks) {
@@ -123,7 +125,7 @@ void generateQueenMoves(Board &board, MoveList &list, Color us){
     while (queens) {
         int from = popLsb(queens);
 
-        uint64_t attacks = queenAttacksSlow(from, board.occupiedAll);
+        uint64_t attacks = queenAttacks(from, board.occupiedAll);
         attacks &= ~board.occupiedByColor[us];
 
         while (attacks) {

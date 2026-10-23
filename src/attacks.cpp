@@ -153,3 +153,16 @@ uint64_t rookAttacksSlow(int sq, uint64_t occupancy){
 uint64_t queenAttacksSlow(int sq, uint64_t occupancy){
     return bishopAttacksSlow(sq, occupancy) | rookAttacksSlow(sq, occupancy);
 }
+
+// rook: the rank and the file of sq, without sq and without the far ends of the lines
+uint64_t rookRelevantMask(int sq){
+    uint64_t rankPart = (0xFFULL << (8 * rankOf(sq))) & ~(FILE_A | FILE_H);
+    uint64_t filePart = FILE_MASKS[fileOf(sq)] & ~(RANK_1 | RANK_8);
+    return (rankPart | filePart) & ~SQ_BB(sq);
+}
+
+// bishop: its empty-board attacks without the four edges (a bishop ray always ends on an edge)
+uint64_t bishopRelevantMask(int sq){
+    return bishopAttacksSlow(sq, 0ULL) & ~(RANK_1 | RANK_8 | FILE_A | FILE_H);
+}
+
