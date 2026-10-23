@@ -1,6 +1,6 @@
 # Versions
 
-## v4 — quiescence search
+## v4 - quiescence search
 Commit: tag `v4`
 Changes: Added Quiescence search, eval with piece development, fixed en passant
 
@@ -68,7 +68,7 @@ Better than v5, with +31 ± 39 Elo, likelihood of superiority is 94.1%
 
 
 
-## v7 — Zobrist hashing + repetition detection
+## v7 - Zobrist hashing + repetition detection
 Commit: tag `v7`
 Changes:
 - Zobrist hashing: 64-bit position key (pieces, side to move, castling rights,
@@ -253,4 +253,106 @@ Online from: 22-10-2026   to: 23-10-2026
 
 
 
-## v11 - 
+## v11 - Speed
+Commit: branch `v11-speed`; tag `v11` (= v11.3) after the final match
+Goal: more nodes per second without changing the search, to recover the speed lost in v10
+(v9 → v10: -32% NPS) and reach deeper in the same time. Every step must leave the search tree
+unchanged (same nodes and same best move at fixed depth). Developed in steps, like v10.
+
+### Steps overview
+| Step  | Changes                                     | NPS vs previous step | NPS vs v10 | Depth 7 time (vs v10) | Match vs v10              |
+|-------|---------------------------------------------|----------------------|------------|-----------------------|---------------------------|
+| v11.1 | Magic bitboards for sliding-piece attacks   | +32%                 | +32%       | 13.2 s (17.3 s)       | -                         |
+| v11.2 | Captures-only move generation in quiescence | +25%                 | +65%       | 10.3 s (17.1 s)       | 57 - 20 - 23, +135 ± 64   |
+| v11.3 | Lazy move ordering                          | +6%                  | +73%       | 10.1 s (17.4 s)       | to do                     |
+
+Speed: `go depth 7` on the 6 standard positions (start, kiwipete, pos3-pos6), fastest of 10 runs, engines
+rotated run by run, nothing else running; NPS = total nodes / total time. Each step was measured in its own run,
+together with the previous step and v10 (v10 gave 1.70-1.73M nps in all three runs), so the percentages compare
+engines from the same run. Per-position tables and method: `docs/notes/BENCH_v11.1.md`, `BENCH_v11.2.md`,
+`BENCH_v11.3.md`; raw data in `docs/data/bench_v10_v11.*.csv`. A single run with all four engines is planned.
+v11.1 has the same search as v10 and v11.3 the same search as v11.2, so they were checked with node counts and
+speed tests instead of matches.
+
+
+### v11.1 - Magic bitboards
+- Bishop, rook and queen attacks are one table lookup instead of walking the rays square by square:
+  `occupancy & mask`, multiply by a magic number, shift, read the precomputed attacks
+- Relevant masks per square (rookRelevantMask, bishopRelevantMask): the lines of the piece without the board
+  edges (rook up to 12 squares, bishop up to 9)
+- Magic numbers found once by a separate program (`tools/find_magics.cpp`, random search with a fixed seed) and
+  hardcoded in `src/magic_numbers.h`; tables filled at startup by initMagics(). The old ray loops (*Slow) are kept
+  only to fill the tables and as a reference for tests
+- Used everywhere: move generation, isSquareAttacked, king attack in the evaluation
+
+Checks: new lookups vs old ray loops on 38.4 million random occupancies (all squares, rook/bishop/queen),
+0 mismatches; perft correct on the 6 positions; same nodes and best moves as v10 at depth 6 and 7.
+
+Result: +32% NPS. Largest gain in rook endgames (pos3 +48%), smallest in the start position (+26%), where the
+sliders are blocked by their own pawns. Less than the 1.5-2.5x expected: slider attacks were only part of the
+cost per node.
+
+
+### v11.2 - Captures-only move generation in quiescence
+- Quiescence generated every pseudo-legal move, scored and sorted all of them, then skipped the quiet ones.
+  Now generateCaptures() produces only the moves it searches: captures, en passant, queen promotions
+- No duplicated code: each piece generator takes a `capturesOnly` flag (pieces target only enemy pieces, pawns
+  skip pushes and under-promotions, the king skips castling); generatePseudoLegalMoves() passes `false`
+
+Checks:
+- Perft correct on the 6 positions; same best moves as v11.1, nodes within 0.1% (kiwipete depth 7: 9,523,360
+  vs 9,524,202). A test build filtering moves before sorting gives exactly v11.2's nodes: same move set, only
+  the order of equal-score captures in the sort changed
+- Bug found while testing: the four piece generators used `occupiedByColor[us]` instead of `[them]` in
+  captures-only mode, so quiescence saw only pawn and king captures (kiwipete depth 1: +155 Qxf6 instead of +90).
+  The node count exposed it at once (6.95M instead of 9.52M)
+
+Result: +25% NPS over v11.1, largest in tactical middlegames (kiwipete, pos6 +27-29%).
+
+#### Local tests (cutechess)
+| Opponent | TC     | Games | Results W-L-D | Elo        |
+|----------|--------|-------|---------------|------------|
+| v10      | 10+0.1 | 100   | 57 - 20 - 23  | +135 ± 64  |
+
+LOS 100%. As White 29 - 7 - 14, as Black 28 - 13 - 9. No losses on time.
+Draws: 12 by repetition, 9 by insufficient material, 2 by the fifty-move rule.
+
+Average depth in the match (from the PGN, `tools/pgn_depth_stats.py`):
+| Engine | Moves 10-40 | All moves | Time/move |
+|--------|-------------|-----------|-----------|
+| v10    | 5.07        | 5.55      | 0.236 s   |
+| v11.2  | 5.41        | 5.86      | 0.233 s   |
+
+About +0.3 plies at the same time per move, as expected from the tree growing ~5.7x per ply
+(log 1.65 / log 5.7 ≈ 0.3). The Elo gain is larger than the +30-70 expected for 1.65x speed; the interval is
+wide, so the true value may be lower, but it is clearly positive. Plausible reason: with the same knowledge,
+v10's evaluation profits a lot from 0.3 extra plies at 10+0.1.
+
+
+### v11.3 - Lazy move ordering
+- Before: orderMoves() sorted the whole move list (selection sort) before the loop, at every node, although
+  most nodes stop after the first or second move (beta cutoff)
+- Now: scoreMoves() scores every move once, and pickMove() runs one pass of the same selection sort at the start
+  of each loop step. The sorting stops when the loop stops. Used in negamax and quiescence, not at the root
+
+Checks: same moves in the same order as v11.2, so node counts and best moves are exactly equal on all 6 positions
+(kiwipete depth 7: 9,523,360, e2a6); perft not affected.
+
+Result: +6% NPS over v11.2 (+7% with median times): small, as sorting was a small part of the cost per node,
+and close to the noise on single positions (start 0%, pos4 +11%).
+
+Depth reached in a fixed time (`go movetime 3000`, best of 3 runs):
+| Engine | start | kiwipete | pos3 | pos4 | pos5 | pos6 |
+|--------|-------|----------|------|------|------|------|
+| v10    | 7     | 6        | 8    | 7    | 7    | 6    |
+| v11.3  | 8     | 6        | 8    | 8    | 7    | 6    |
+
+One more ply in 2 of 6 positions, never fewer; in the others the next ply still does not fit in 3 s
+(kiwipete depth 7: ~4 s for v11.3, ~7 s for v10).
+
+
+### Conclusions
++73% NPS since v10 with the same evaluation and the same search: depth 7 on the 6 positions takes 10.1 s
+instead of 17.4 s, and v11 is now faster than v9 while keeping the full v10 evaluation.
+Measured strength so far: v11.2 vs v10 = +135 ± 64. No match yet for v11.3: it searches the identical tree as
+v11.2, only faster, so it cannot be weaker; a match (vs v10 or v11.2) is planned to confirm it.

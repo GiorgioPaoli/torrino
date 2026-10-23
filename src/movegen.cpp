@@ -3,7 +3,7 @@
 #include "magics.h"
 
 // ORDINE IMPORTANTE !!!! Aggiunge prima la promozione di regina
-void generatePawnMoves(Board &board, MoveList &list, Color us){
+void generatePawnMoves(Board &board, MoveList &list, Color us, bool capturesOnly){
     // deve gestire EnPassant e Promozioni
     Color them = opposite(us);
     uint64_t pawns = board.pieceBB[us][PAWN];
@@ -16,7 +16,7 @@ void generatePawnMoves(Board &board, MoveList &list, Color us){
         int from = popLsb(pawns);
         int to = from + pushDir;
         if (!getBit(board.occupiedAll, to)) {
-            if (rankOf(from) == startRank) {
+            if (rankOf(from) == startRank && !capturesOnly) {
                 int to2 = from + 2*pushDir;
                 if(!getBit(board.occupiedAll, to2)) {
                     list.add({from, to2, DOUBLE_PAWN_PUSH});
@@ -24,10 +24,12 @@ void generatePawnMoves(Board &board, MoveList &list, Color us){
             }
             if (rankOf(to) == promotionRank) {
                 list.add({from, to, PROMOTION_QUEEN});
-                list.add({from, to, PROMOTION_ROOK});
-                list.add({from, to, PROMOTION_KNIGHT});
-                list.add({from, to, PROMOTION_BISHOP});
-            } else {
+                if (!capturesOnly) {
+                    list.add({from, to, PROMOTION_ROOK});
+                    list.add({from, to, PROMOTION_KNIGHT});
+                    list.add({from, to, PROMOTION_BISHOP});
+                }
+            } else if (!capturesOnly) {
                 list.add({from, to, QUIET});
             }
 
@@ -38,9 +40,11 @@ void generatePawnMoves(Board &board, MoveList &list, Color us){
             int to = popLsb(captures);
             if (rankOf(to) == promotionRank) {
                 list.add({from, to, PROMOTION_QUEEN_CAPTURE});
-                list.add({from, to, PROMOTION_ROOK_CAPTURE});
-                list.add({from, to, PROMOTION_BISHOP_CAPTURE});
-                list.add({from, to, PROMOTION_KNIGHT_CAPTURE});
+                if (!capturesOnly) {
+                    list.add({from, to, PROMOTION_ROOK_CAPTURE});
+                    list.add({from, to, PROMOTION_BISHOP_CAPTURE});
+                    list.add({from, to, PROMOTION_KNIGHT_CAPTURE});
+                }
             } else {
                 list.add({from, to, CAPTURE});
             }
@@ -54,7 +58,7 @@ void generatePawnMoves(Board &board, MoveList &list, Color us){
 }
 
 // BLUEPRINT per i commenti
-void generateKnightMoves(Board &board, MoveList &list, Color us){
+void generateKnightMoves(Board &board, MoveList &list, Color us, bool capturesOnly){
     Color them = opposite(us);
     uint64_t knights = board.pieceBB[us][KNIGHT];
 
@@ -64,7 +68,8 @@ void generateKnightMoves(Board &board, MoveList &list, Color us){
 
         // prendo le case attaccate e levo le sovrapposizioni con le nostre pedine 
         uint64_t attacks = knightAttacks[from];
-        attacks &= ~board.occupiedByColor[us];
+        if (capturesOnly)   attacks &= board.occupiedByColor[them];
+        else                attacks &= ~board.occupiedByColor[us];
 
         while (attacks) {
             int to = popLsb(attacks);
@@ -78,7 +83,7 @@ void generateKnightMoves(Board &board, MoveList &list, Color us){
 }
 
 // Now uses Macig Bitboards
-void generateBishopMoves(Board &board, MoveList &list, Color us){
+void generateBishopMoves(Board &board, MoveList &list, Color us, bool capturesOnly){
     Color them = opposite(us);
     uint64_t bishops = board.pieceBB[us][BISHOP];
 
@@ -86,7 +91,8 @@ void generateBishopMoves(Board &board, MoveList &list, Color us){
         int from = popLsb(bishops);
 
         uint64_t attacks = bishopAttacks(from, board.occupiedAll);
-        attacks &= ~board.occupiedByColor[us];
+        if (capturesOnly)   attacks &= board.occupiedByColor[them];
+        else                attacks &= ~board.occupiedByColor[us];
 
         while (attacks) {
             int to = popLsb(attacks);
@@ -98,7 +104,7 @@ void generateBishopMoves(Board &board, MoveList &list, Color us){
     }
 }
 
-void generateRookMoves(Board &board, MoveList &list, Color us){
+void generateRookMoves(Board &board, MoveList &list, Color us, bool capturesOnly){
     Color them = opposite(us);
     uint64_t rooks = board.pieceBB[us][ROOK];
 
@@ -106,7 +112,8 @@ void generateRookMoves(Board &board, MoveList &list, Color us){
         int from = popLsb(rooks);
 
         uint64_t attacks = rookAttacks(from, board.occupiedAll);
-        attacks &= ~board.occupiedByColor[us];
+        if (capturesOnly)   attacks &= board.occupiedByColor[them];
+        else                attacks &= ~board.occupiedByColor[us];
 
         while (attacks) {
             int to = popLsb(attacks);
@@ -118,7 +125,7 @@ void generateRookMoves(Board &board, MoveList &list, Color us){
     }
 }
 
-void generateQueenMoves(Board &board, MoveList &list, Color us){
+void generateQueenMoves(Board &board, MoveList &list, Color us, bool capturesOnly){
     Color them = opposite(us);
     uint64_t queens = board.pieceBB[us][QUEEN];
 
@@ -126,7 +133,8 @@ void generateQueenMoves(Board &board, MoveList &list, Color us){
         int from = popLsb(queens);
 
         uint64_t attacks = queenAttacks(from, board.occupiedAll);
-        attacks &= ~board.occupiedByColor[us];
+        if (capturesOnly)   attacks &= board.occupiedByColor[them];
+        else                attacks &= ~board.occupiedByColor[us];
 
         while (attacks) {
             int to = popLsb(attacks);
@@ -146,7 +154,7 @@ void generateQueenMoves(Board &board, MoveList &list, Color us){
                     |
                     V
 */
-void generateKingMoves(Board &board, MoveList &list, Color us){
+void generateKingMoves(Board &board, MoveList &list, Color us, bool capturesOnly){
     // deve gestire castling controllando se la casella dove si trova, quella di mezzo
     // e quella di arrivo sono sotto attacco, e deve controllare le flags corrispondenti
     Color them = opposite(us);
@@ -167,50 +175,52 @@ void generateKingMoves(Board &board, MoveList &list, Color us){
             Controllo se tutte le case sono libere tra il re e la torre    
         */
         // FLAGS per WHITE
-        if (us == WHITE) {
-            if (getBit(board.castlingRights, 0)) {
-                if ((board.occupiedAll & betweenKS) == 0) {
-                    if (!board.isSquareAttacked(E1, them)           // casa di partenza non sotto scacco
-                        && !board.isSquareAttacked(F1, them)        // casa di passaggio non sotto scacco
-                        && !board.isSquareAttacked(G1, them)) {     // casa di arrivo non sotto scacco
-                            list.add({E1, G1, CASTLE_KINGSIDE});
+        if (!capturesOnly) {
+            if (us == WHITE) {
+                if (getBit(board.castlingRights, 0)) {
+                    if ((board.occupiedAll & betweenKS) == 0) {
+                        if (!board.isSquareAttacked(E1, them)           // casa di partenza non sotto scacco
+                            && !board.isSquareAttacked(F1, them)        // casa di passaggio non sotto scacco
+                            && !board.isSquareAttacked(G1, them)) {     // casa di arrivo non sotto scacco
+                                list.add({E1, G1, CASTLE_KINGSIDE});
+                        }
                     }
                 }
-            }
-            if (getBit(board.castlingRights, 1)) {
-                if ((board.occupiedAll & betweenQS) == 0) {
-                    if (!board.isSquareAttacked(E1, them)
-                        && !board.isSquareAttacked(D1, them)
-                        && !board.isSquareAttacked(C1, them)) {
-                            list.add({E1, C1, CASTLE_QUEENSIDE});
+                if (getBit(board.castlingRights, 1)) {
+                    if ((board.occupiedAll & betweenQS) == 0) {
+                        if (!board.isSquareAttacked(E1, them)
+                            && !board.isSquareAttacked(D1, them)
+                            && !board.isSquareAttacked(C1, them)) {
+                                list.add({E1, C1, CASTLE_QUEENSIDE});
+                        }
                     }
                 }
-            }
-        } 
-        // FLAGS per BLACK
-        else {
-            if (getBit(board.castlingRights, 2)) {
-                if ((board.occupiedAll & betweenKS) == 0) {
-                    if (!board.isSquareAttacked(E8, them)           // casa di partenza non sotto scacco
-                        && !board.isSquareAttacked(F8, them)        // casa di passaggio non sotto scacco
-                        && !board.isSquareAttacked(G8, them)) {     // casa di arrivo non sotto scacco
-                            list.add({E8, G8, CASTLE_KINGSIDE});
+            } 
+            // FLAGS per BLACK
+            else {
+                if (getBit(board.castlingRights, 2)) {
+                    if ((board.occupiedAll & betweenKS) == 0) {
+                        if (!board.isSquareAttacked(E8, them)           // casa di partenza non sotto scacco
+                            && !board.isSquareAttacked(F8, them)        // casa di passaggio non sotto scacco
+                            && !board.isSquareAttacked(G8, them)) {     // casa di arrivo non sotto scacco
+                                list.add({E8, G8, CASTLE_KINGSIDE});
+                        }
                     }
                 }
-            }
-            if (getBit(board.castlingRights, 3)) {
-                if ((board.occupiedAll & betweenQS) == 0) {
-                    if (!board.isSquareAttacked(E8, them)
-                        && !board.isSquareAttacked(D8, them)
-                        && !board.isSquareAttacked(C8, them)) {
-                            list.add({E8, C8, CASTLE_QUEENSIDE});
+                if (getBit(board.castlingRights, 3)) {
+                    if ((board.occupiedAll & betweenQS) == 0) {
+                        if (!board.isSquareAttacked(E8, them)
+                            && !board.isSquareAttacked(D8, them)
+                            && !board.isSquareAttacked(C8, them)) {
+                                list.add({E8, C8, CASTLE_QUEENSIDE});
+                        }
                     }
                 }
             }
         }
         
         uint64_t attacks = kingAttacks[from];
-        attacks &= ~board.occupiedByColor[us];
+        attacks &= capturesOnly ? board.occupiedByColor[them] : ~board.occupiedByColor[us];
         while (attacks) {
             int to = popLsb(attacks);
             Move move {from, to, (getBit(board.occupiedByColor[them], to)) ? CAPTURE : QUIET};
@@ -221,12 +231,12 @@ void generateKingMoves(Board &board, MoveList &list, Color us){
 }
 
 void generatePseudoLegalMoves(Board &board, MoveList &list){
-    generatePawnMoves(board, list, board.sideToMove);
-    generateKnightMoves(board, list, board.sideToMove);
-    generateBishopMoves(board, list, board.sideToMove);
-    generateRookMoves(board, list, board.sideToMove);
-    generateQueenMoves(board, list, board.sideToMove);
-    generateKingMoves(board, list, board.sideToMove);
+    generatePawnMoves(board, list, board.sideToMove, false);
+    generateKnightMoves(board, list, board.sideToMove, false);
+    generateBishopMoves(board, list, board.sideToMove, false);
+    generateRookMoves(board, list, board.sideToMove, false);
+    generateQueenMoves(board, list, board.sideToMove, false);
+    generateKingMoves(board, list, board.sideToMove, false);
 }
 
 void generateLegalMoves(Board &board, MoveList &list){
@@ -248,6 +258,17 @@ void generateLegalMoves(Board &board, MoveList &list){
         
         board.unmakeMove(pseudo.moves[i], undo);
     }
+}
+
+// only the moves quiescence searches: captures, en passant and queen promotions
+// it generates normal moves from the already existing functions passing the flag captuesOnly as true
+void generateCaptures(Board &board, MoveList &list){
+    generatePawnMoves(board, list, board.sideToMove, true);
+    generateKnightMoves(board, list, board.sideToMove, true);
+    generateBishopMoves(board, list, board.sideToMove, true);
+    generateRookMoves(board, list, board.sideToMove, true);
+    generateQueenMoves(board, list, board.sideToMove, true);
+    generateKingMoves(board, list, board.sideToMove, true);
 }
 
 // MOVE ORDERING E SCORE MOVE
@@ -305,6 +326,28 @@ void orderMoves(Board &board, MoveList &list, Move killer1, Move killer2){
     }
 }
 
+// lazy ordering, step 1: scores every move once
+void scoreMoves(Board &board, MoveList &list, int scores[], Move killer1, Move killer2){
+    for (int i = 0; i < list.count; i++) {
+        scores[i] = scoreMove(board, list.moves[i], killer1, killer2);
+    }
+}
+
+// lazy ordering, step 2: moves the best of the remaining moves (start ... count-1) to position start.
+// It is one pass of the selection sort in orderMoves, so the moves come out in exactly the same order
+void pickMove(MoveList &list, int scores[], int start){
+    int best = start;
+    for (int j = start + 1; j < list.count; j++) {
+        if (scores[j] > scores[best]) best = j;
+    }
+
+    Move tmpMove = list.moves[start];
+    list.moves[start] = list.moves[best];
+    list.moves[best] = tmpMove;
+    int tmpScore = scores[start];
+    scores[start] = scores[best];
+    scores[best] = tmpScore;
+}
 
 
 

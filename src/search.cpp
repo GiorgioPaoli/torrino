@@ -30,29 +30,27 @@ int quiescence(Board &board, int alpha, int beta){
     Color us = board.sideToMove;
 
     MoveList list;
-    generatePseudoLegalMoves(board, list);
-    orderMoves(board, list, {-1, -1, QUIET}, {-1, -1, QUIET});
+    generateCaptures(board, list);
+
+    int scores[256];
+    scoreMoves(board, list, scores, {-1, -1, QUIET}, {-1, -1, QUIET});
 
     for (int i = 0; i < list.count; i++){
-        int flag = list.moves[i].flags;
-        if (flag == CAPTURE || flag == PROMOTION_QUEEN || flag == PROMOTION_QUEEN_CAPTURE || flag == EN_PASSANT) {
-
-            UndoInfo undo;
-            board.makeMove(list.moves[i], undo);
-
-            if (board.isInCheck(us)) {
-                board.unmakeMove(list.moves[i], undo);
-                continue;
-            }
-            
-            int score = -quiescence(board, -beta, -alpha);
+        pickMove(list, scores, i);
+        UndoInfo undo;
+        board.makeMove(list.moves[i], undo);
+        if (board.isInCheck(us)) {
             board.unmakeMove(list.moves[i], undo);
-            
-            if (score > bestScore) bestScore = score;
-            if (bestScore > alpha) alpha = bestScore;
-            if (alpha >= beta) break;
-        } 
-    }
+            continue;
+        }
+        
+        int score = -quiescence(board, -beta, -alpha);
+        board.unmakeMove(list.moves[i], undo);
+        
+        if (score > bestScore) bestScore = score;
+        if (bestScore > alpha) alpha = bestScore;
+        if (alpha >= beta) break;
+    } 
 
     return bestScore;
 }
@@ -88,13 +86,14 @@ int negamax(Board &board, int depth, int alpha, int beta, int ply){
     MoveList list;
     generatePseudoLegalMoves(board, list);
 
-    // ordina le mosse mettendo prima le catture e promozioni, rende piu efficiente alpha beta pruning
-    orderMoves(board, list, killers[ply][0], killers[ply][1]);
+    int scores[256];
+    scoreMoves(board, list, scores, killers[ply][0], killers[ply][1]);
 
     int bestScore = -INF;
     int legalMoves = 0;
 
     for (int i = 0; i < list.count; i++) {
+        pickMove(list, scores, i);
         UndoInfo undo;
         board.makeMove(list.moves[i], undo);
 
