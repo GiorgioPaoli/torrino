@@ -245,10 +245,12 @@ Mobility and piece activity postponed until after magic bitboards (v11): they ne
 attacks for every piece and would be too slow with the current attack functions.
 
 ### Lichess (bot: TorrinoBOT)
-Online from: 22-10-2026   to: —
+Online from: 22-10-2026   to: 23-10-2026
 | Category | Starting rating | Final rating | Games | Results W-L-D |
 |----------|-----------------|--------------|-------|---------------|
-| Bullet   | 1948            |              |       |               |
-| Blitz    | 1753            |              |       |               |
+| Bullet   | 1948            | 2007 (+57)   | 81    | 45 - 30 - 16  |
+| Blitz    | 1753            | 1771 (+18)   | 31    | 15 - 13 - 4   |
 
-Note: v10.1 was also online on 2026-10-22 (rating before v10: bullet ____, blitz ____)
+
+
+## v11 - 
