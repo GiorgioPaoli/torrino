@@ -12,22 +12,31 @@
      Save it as docs/gifs/hero.gif (replacing the current static image). -->
 <p align="center"><img src="docs/gifs/hero.gif" width="360" alt="TorrinoBOT playing a game on Lichess"></p>
 
-Torrino plays online as **[TorrinoBOT](https://lichess.org/@/TorrinoBOT)** (bullet 2007, blitz 1771 as of October 23, 2026).
+Torrino plays online as **[TorrinoBOT](https://lichess.org/@/TorrinoBOT)**.
 Every change is first verified for correctness and then measured in engine-vs-engine matches;
 the complete log of changes and results is in **[VERSIONS.md](VERSIONS.md)**.
 
 ---
 
-## Highlights
+## At a glance
 
-- **A complete chess engine, written from scratch in C++17.** Bitboard board representation, legal move generation,
-  alpha-beta search with iterative deepening and quiescence search, and a hand-crafted evaluation. No chess libraries.
-- **Speaks UCI.** It works with any UCI graphical interface (cutechess, En Croissant, Arena) and plays online as the
-  Lichess bot TorrinoBOT.
-- **Evaluation with chess knowledge.** Piece-square tables blended between middlegame and endgame, king safety, pawn
-  structure (passed, isolated, doubled pawns) and a rule for mating with king and rook or queen.
-- **Built to be checked.** Move generation is verified with perft, every change is tested in engine-vs-engine matches,
-  and the whole development history is documented version by version ([Results](#results)).
+| | |
+|---|---|
+| **Online** | Lichess bullet **2007**, blitz **1771** ([TorrinoBOT](https://lichess.org/@/TorrinoBOT), October 2026) |
+| **Against Stockfish** | **55.5%** against Stockfish limited to `UCI_Elo` 2000 (100 games, 10+0.1) |
+| **Speed** | **3.1 M** positions per second on one laptop core, **+76%** in the latest version |
+| **Correctness** | move generation matches the reference perft counts on the 6 standard test positions |
+
+## Key concepts
+
+- **Bitboards and magic bitboards.** The board is twelve 64-bit integers, one per piece type and colour; the moves
+  of bishops, rooks and queens come from precomputed tables with a single lookup.
+- **Alpha-beta search.** Negamax with iterative deepening, quiescence search (captures until the position is quiet),
+  killer-move ordering, check extensions and repetition detection with Zobrist hashing.
+- **Hand-crafted evaluation.** Material and piece-square tables blended between middlegame and endgame, king safety,
+  pawn structure (passed, isolated, doubled pawns) and endgame technique to mate with king and rook or queen.
+- **Measured, not guessed.** Every version is checked for correctness and then tested in engine-vs-engine matches;
+  the full log is in [VERSIONS.md](VERSIONS.md).
 
 ---
 
@@ -40,36 +49,24 @@ the complete log of changes and results is in **[VERSIONS.md](VERSIONS.md)**.
 5. [Results](#results)
 6. [Testing and validation](#testing-and-validation)
 7. [Case studies](#case-studies)
-8. [Limitations and future work](#limitations-and-future-work)
-9. [What I learned](#what-i-learned)
-10. [About](#about)
-11. [References](#references)
+8. [Usage (UCI)](#usage-uci)
+9. [Limitations and future work](#limitations-and-future-work)
+10. [What I learned](#what-i-learned)
+11. [About](#about)
+12. [References](#references)
 
 ---
 
 ## Quick start
 
-Requirements: a C++17 compiler (developed with g++ / MinGW-w64 on Windows).
-
 ```bash
 git clone https://github.com/GiorgioPaoli/torrino.git
 cd torrino/src
 g++ -O3 -march=native -flto -static -std=c++17 *.cpp -o ../bin/torrino.exe
-../bin/torrino.exe
 ```
+Requires a C++17 compiler (developed with g++ / MinGW-w64 on Windows). Then run `bin/torrino.exe` in any UCI
+interface; the commands are listed in [Usage (UCI)](#usage-uci).
 <!-- TODO: replace with a Makefile or CMakeLists.txt so the build is one command, and test it on a clean machine. -->
-
-Example UCI session (input lines, then the engine's output):
-```text
-uci
-position startpos moves e2e4 e7e5
-go movetime 2000
-info depth 7 score cp 35 nodes 2847000 nps 1300000 time 2190 pv e2e4
-bestmove ...
-```
-Extra commands: `go depth N`, `eval` (static evaluation and game phase of the current position).
-Works with any UCI (Universal Chess Interface) GUI, such as cutechess, En Croissant or Arena, and with
-[lichess-bot](https://github.com/lichess-bot-devs/lichess-bot).
 
 ---
 
@@ -354,6 +351,23 @@ helped push the opponent's king to the edge.<br>
 
 Other bugs found through testing: an uninitialised en passant square causing random crashes (found when a cutechess
 match stopped on an engine crash), and the time-management issue described above.
+
+---
+
+## Usage (UCI)
+
+Torrino speaks UCI (Universal Chess Interface), so it works with any UCI GUI, such as cutechess, En Croissant or
+Arena, and with [lichess-bot](https://github.com/lichess-bot-devs/lichess-bot).
+
+Commands: `uci`, `isready`, `ucinewgame`, `position startpos | fen <fen> [moves ...]`,
+`go depth N | movetime T | wtime W btime B [winc WI binc BI]`, `quit`, plus `eval` (static evaluation, for debugging).
+
+```text
+position startpos moves e2e4 e7e5
+go depth 6
+info depth 6 score cp 0 nodes 416341 nps 1764156 time 236 pv b1c3
+bestmove b1c3
+```
 
 ---
 
