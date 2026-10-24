@@ -254,23 +254,26 @@ Online from: 22-10-2026   to: 23-10-2026
 
 
 ## v11 - Speed
-Commit: branch `v11-speed`; tag `v11` (= v11.3) after the final match
+Commit: branch `v11-speed`; tag `v11` (= v11.3)
 Goal: more nodes per second without changing the search, to recover the speed lost in v10
 (v9 → v10: -32% NPS) and reach deeper in the same time. Every step must leave the search tree
 unchanged (same nodes and same best move at fixed depth). Developed in steps, like v10.
 
 ### Steps overview
-| Step  | Changes                                     | NPS vs previous step | NPS vs v10 | Depth 7 time (vs v10) | Match vs v10              |
-|-------|---------------------------------------------|----------------------|------------|-----------------------|---------------------------|
-| v11.1 | Magic bitboards for sliding-piece attacks   | +32%                 | +32%       | 13.2 s (17.3 s)       | -                         |
-| v11.2 | Captures-only move generation in quiescence | +25%                 | +65%       | 10.3 s (17.1 s)       | 57 - 20 - 23, +135 ± 64   |
-| v11.3 | Lazy move ordering                          | +6%                  | +73%       | 10.1 s (17.4 s)       | to do                     |
+| Step  | Changes                                     | NPS     | vs previous step | vs v10 | Depth 7 time | Match vs v10             |
+|-------|---------------------------------------------|---------|------------------|--------|--------------|--------------------------|
+| v10   | (baseline)                                  | 1.77 M  | -                | -      | 16.8 s       | -                        |
+| v11.1 | Magic bitboards for sliding-piece attacks   | 2.33 M  | +32%             | +32%   | 12.7 s       | -                        |
+| v11.2 | Captures-only move generation in quiescence | 2.86 M  | +23%             | +62%   | 10.4 s       | 57 - 20 - 23, +135 ± 64  |
+| v11.3 | Lazy move ordering                          | 3.10 M  | +8%              | +76%   | 9.6 s        | 54 - 24 - 22, +108 ± 63  |
 
-Speed: `go depth 7` on the 6 standard positions (start, kiwipete, pos3-pos6), fastest of 10 runs, engines
-rotated run by run, nothing else running; NPS = total nodes / total time. Each step was measured in its own run,
-together with the previous step and v10 (v10 gave 1.70-1.73M nps in all three runs), so the percentages compare
-engines from the same run. Per-position tables and method: `docs/notes/BENCH_v11.1.md`, `BENCH_v11.2.md`,
-`BENCH_v11.3.md`; raw data in `docs/data/bench_v10_v11.*.csv`. A single run with all four engines is planned.
+Speed: one run with all four engines (2026-10-24), `go depth 7` on the 6 standard positions (start, kiwipete,
+pos3-pos6), fastest of 10 runs, the order of the engines rotated every run, nothing else running;
+NPS = total nodes / total time, depth 7 time = sum over the 6 positions. With median times instead of the
+fastest runs: v10 1.66M, v11.1 2.17M, v11.2 2.70M, v11.3 2.87M nps (v11.3 vs v10 +73%).
+Node counts and best moves in the same run: v11.1 = v10 and v11.3 = v11.2 exactly; v11.2 within 0.1% of v11.1.
+Per-position table: `docs/notes/BENCH_v11.md`; raw data: `docs/data/bench_v11_all.csv` (earlier per-step runs
+in `BENCH_v11.1.md`, `BENCH_v11.2.md`, `BENCH_v11.3.md`).
 v11.1 has the same search as v10 and v11.3 the same search as v11.2, so they were checked with node counts and
 speed tests instead of matches.
 
@@ -288,7 +291,7 @@ speed tests instead of matches.
 Checks: new lookups vs old ray loops on 38.4 million random occupancies (all squares, rook/bishop/queen),
 0 mismatches; perft correct on the 6 positions; same nodes and best moves as v10 at depth 6 and 7.
 
-Result: +32% NPS. Largest gain in rook endgames (pos3 +48%), smallest in the start position (+26%), where the
+Result: +32% NPS. Largest gain in rook endgames (pos3 +54%), smallest in the start position (+27%), where the
 sliders are blocked by their own pawns. Less than the 1.5-2.5x expected: slider attacks were only part of the
 cost per node.
 
@@ -307,7 +310,7 @@ Checks:
   captures-only mode, so quiescence saw only pawn and king captures (kiwipete depth 1: +155 Qxf6 instead of +90).
   The node count exposed it at once (6.95M instead of 9.52M)
 
-Result: +25% NPS over v11.1, largest in tactical middlegames (kiwipete, pos6 +27-29%).
+Result: +23% NPS over v11.1, largest in tactical middlegames and endgames (kiwipete +23%, pos3 and pos6 +27%).
 
 #### Local tests (cutechess)
 | Opponent | TC     | Games | Results W-L-D | Elo        |
@@ -338,8 +341,8 @@ v10's evaluation profits a lot from 0.3 extra plies at 10+0.1.
 Checks: same moves in the same order as v11.2, so node counts and best moves are exactly equal on all 6 positions
 (kiwipete depth 7: 9,523,360, e2a6); perft not affected.
 
-Result: +6% NPS over v11.2 (+7% with median times): small, as sorting was a small part of the cost per node,
-and close to the noise on single positions (start 0%, pos4 +11%).
+Result: +8% NPS over v11.2 (+6% with median times): small, as sorting was a small part of the cost per node,
+and close to the noise on single positions (start +2%, pos3 -1%, kiwipete +11%).
 
 Depth reached in a fixed time (`go movetime 3000`, best of 3 runs):
 | Engine | start | kiwipete | pos3 | pos4 | pos5 | pos6 |
@@ -348,11 +351,41 @@ Depth reached in a fixed time (`go movetime 3000`, best of 3 runs):
 | v11.3  | 8     | 6        | 8    | 8    | 7    | 6    |
 
 One more ply in 2 of 6 positions, never fewer; in the others the next ply still does not fit in 3 s
-(kiwipete depth 7: ~4 s for v11.3, ~7 s for v10).
+(kiwipete depth 7: ~3.6 s for v11.3, ~6.6 s for v10).
+
+#### Local tests (cutechess)
+| Opponent | TC     | Games | Results W-L-D | Elo        |
+|----------|--------|-------|---------------|------------|
+| v10      | 10+0.1 | 100   | 54 - 24 - 22  | +108 ± 63  |
+
+LOS 100%. As White 31 - 9 - 10, as Black 23 - 15 - 12. No losses on time.
+Draws: 11 by repetition, 7 by insufficient material, 3 by the fifty-move rule, 1 by stalemate.
+
+Average depth in the match (from the PGN, `tools/pgn_depth_stats.py`):
+| Engine | Moves 10-40 | All moves | Time/move |
+|--------|-------------|-----------|-----------|
+| v10    | 5.13        | 5.47      | 0.222 s   |
+| v11.3  | 5.45        | 5.80      | 0.221 s   |
+
++108 ± 63 is lower than the +135 ± 64 of v11.2 vs v10, but the two results are well inside each other's
+margins (the difference, 27 Elo, is less than half of either interval), so it is noise, not a regression:
+v11.3 searches exactly the same tree as v11.2 and is 8% faster (benchmark above), so it should not play weaker
+at the same time per move. 8% more speed is worth only about 0.05 plies, too little to see in 100 games:
+the average depth gain over v10 is the same as v11.2's (+0.32 vs +0.34 plies in moves 10-40).
 
 
 ### Conclusions
-+73% NPS since v10 with the same evaluation and the same search: depth 7 on the 6 positions takes 10.1 s
-instead of 17.4 s, and v11 is now faster than v9 while keeping the full v10 evaluation.
-Measured strength so far: v11.2 vs v10 = +135 ± 64. No match yet for v11.3: it searches the identical tree as
-v11.2, only faster, so it cannot be weaker; a match (vs v10 or v11.2) is planned to confirm it.
++76% NPS since v10 with the same evaluation and the same search: depth 7 on the 6 positions takes 9.6 s
+instead of 16.8 s (-43%), and v11 is now faster than v9 while keeping the full v10 evaluation.
+Strength vs v10 (100 games each at 10+0.1): v11.2 +135 ± 64, v11.3 +108 ± 63. Since v11.2 and v11.3 search
+the same tree and v11.3 is faster, the two matches measure the same thing; together (200 games, 111 - 44 - 45)
+they give about **+121 ± 45 Elo for v11 over v10**, coming entirely from speed (+0.3 plies at the same time).
+Final v11 = v11.3 (`bin/engine_v11.exe`): the fastest build, with the strength confirmed by its own match.
+
+
+### Lichess (bot: TorrinoBOT)
+Online from: 23-10-2026   to: 24-10-2026
+| Category | Starting rating | Final rating | Games | Results W-L-D |
+|----------|-----------------|--------------|-------|---------------|
+| Bullet   | 2007            |  | | |
+| Blitz    | 1771            |  | | |
