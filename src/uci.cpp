@@ -7,6 +7,7 @@
 #include "attacks.h"
 #include "zobrist.h"
 #include "magics.h"
+#include "tt.h"
 #include "uci.h"
 
 
@@ -17,6 +18,7 @@ void uciLoop(){
     initSliderMasks();
     initMagics();
     initPawnMasks();
+    clearTT();
     board.initBoard();
 
     std::string line;
@@ -26,7 +28,7 @@ void uciLoop(){
         iss >> token;                     // prima parola = il comando
 
         if (token == "uci"){
-            std::cout << "id name Torrino v11\n";
+            std::cout << "id name Torrino v12\n";
             std::cout << "id author Giorgio\n";
             std::cout << "uciok" << std::endl;
         }
@@ -35,6 +37,7 @@ void uciLoop(){
         }
         else if (token == "ucinewgame"){
             board.initBoard();
+            clearTT();
         }
         else if (token == "eval"){
             int score = evaluate(board);          // relative to the side to move

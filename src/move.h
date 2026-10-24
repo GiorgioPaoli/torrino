@@ -26,6 +26,8 @@ struct Move {
     int flags; // ci sono 14 flags, assegna da 0 a 13, entrano in un binario di 4 bit
 };
 
+constexpr Move NULL_MOVE = {-1, -1, QUIET}; 
+
 struct MoveList {
     Move moves[256];
     int count = 0;

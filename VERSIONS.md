@@ -387,5 +387,74 @@ Final v11 = v11.3 (`bin/engine_v11.exe`): the fastest build, with the strength c
 Online from: 23-10-2026   to: 24-10-2026
 | Category | Starting rating | Final rating | Games | Results W-L-D |
 |----------|-----------------|--------------|-------|---------------|
-| Bullet   | 2007            |  | | |
-| Blitz    | 1771            |  | | |
+| Bullet   | 2007            | 2037 (+30)   | 76    | - - -         |
+| Blitz    | 1771            | 1824 (+53)   | 40    | - - -         |
+
+
+## v12 - Transposition table
+Commit: in progress on `main` (tag `v12` after the final match)
+Goal: remember positions already searched (Zobrist key → best move, score, depth, bound) so the same depth needs
+far fewer nodes. Developed in two steps, v12.1 and v12.3 (there is no separate v12.2 build).
+
+
+### v12.1 - TT move ordering
+- New files `tt.h` / `tt.cpp`: table of 2^20 entries (key, best move, score, depth, flag), index = key & (size - 1),
+  always-replace; probeTT() checks the full 64-bit key, storeTT() overwrites the slot, clearTT() at startup and
+  on `ucinewgame`
+- negamax probes the table after the repetition check and the check extension; the stored best move, if it is in
+  the generated list, gets the highest ordering score (30000) and is searched first
+- negamax tracks its best move and stores it at the end (never after an interrupted search); scores not used yet
+
+Checks: perft correct; same best moves and scores as v11 at depth 7.
+Result: -25% nodes and -26% time to depth 7, same NPS.
+
+
+### v12.3 - TT cutoffs and mate scores
+- Cutoffs: when the stored depth is at least the current depth, the stored score is used directly: exact scores
+  are returned, lower bounds when ≥ beta, upper bounds when ≤ alpha. The flag is set when storing (fail low →
+  upper, fail high → lower, else exact, using the original alpha). The probe moved before move generation, so a
+  cutoff also skips generating and scoring the moves
+- Mate scores: stored relative to the node instead of the root (scoreToTT / scoreFromTT), so a mate found again
+  at another ply keeps the right distance
+
+Checks: perft correct; same best moves and scores as v11 at depth 7; mate distances stable between depths.
+Bugs found while testing: the TT move was read even when the probe failed (uninitialised memory), and after the
+first fix it was used only from entries deep enough for a cutoff (kiwipete depth 7: 5.0M nodes instead of 3.65M).
+Both fixed.
+Result: -65% nodes and -63% time to depth 7 compared with v11; basic mates (KR vs K, KQ vs K) now found.
+
+
+### Speed and mates
+Speed (depth 7 on the 6 standard positions, fastest of 10 runs, two searches at a time; data in `docs/data/bench_v12.csv`):
+| Position | v11 nodes  | v12.1 nodes | v12.3 nodes | v11 time | v12.1 time | v12.3 time | v12.3 vs v11 (time) |
+|----------|------------|-------------|-------------|----------|------------|------------|---------------------|
+| start    | 1,040,373  | 788,546     | 494,818     | 0.310 s  | 0.241 s    | 0.141 s    | -55%                |
+| kiwipete | 9,523,360  | 7,119,182   | 3,653,450   | 3.931 s  | 2.924 s    | 1.523 s    | -61%                |
+| pos3     | 825,186    | 220,933     | 121,410     | 0.150 s  | 0.046 s    | 0.027 s    | -82%                |
+| pos4     | 1,272,695  | 1,128,129   | 632,291     | 0.513 s  | 0.433 s    | 0.247 s    | -52%                |
+| pos5     | 6,004,952  | 5,150,074   | 1,919,909   | 1.667 s  | 1.451 s    | 0.552 s    | -67%                |
+| pos6     | 10,965,855 | 7,741,257   | 3,644,392   | 3.862 s  | 2.657 s    | 1.362 s    | -65%                |
+| **Total**| **29.6M**  | **22.1M (-25%)** | **10.5M (-65%)** | **10.43 s** | **7.75 s (-26%)** | **3.85 s (-63%)** | **-63%** |
+
+NPS is almost unchanged (v11 2.84M, v12.1 2.86M, v12.3 2.72M): the gain comes from a smaller tree, not from faster nodes.
+With median times: 11.16 s → 8.33 s → 4.13 s.
+
+Mates (`go movetime`, Stockfish depth 30 as reference):
+- King and rook vs king (`8/8/8/4k3/8/8/8/R3K3 w - - 0 1`): v11 reaches depth 10 in 20 s and sees no mate;
+  v12.3 reaches depth 17 in 14 s (mate 19) and depth 18 in 35 s (mate 16; Stockfish reported mate 17)
+- King and queen vs king (`8/8/8/4k3/8/8/8/3QK3 w - - 0 1`): v11 reaches depth 7 in 20 s, no mate; v12.3 finds
+  mate 11 at depth 12 (3.6 s) and the correct mate 7 from depth 13 on, stable up to depth 16
+
+#### Conclusions
+The transposition table cuts the tree at depth 7 by 65% and the time by 63%, with the same moves and scores (2.7x faster to the same depth, roughly half a ply to one ply more in the same time).
+The TT move alone (v12.1) gives -25%; the cutoffs add the rest.
+In endgames the effect is much larger (pos3 -82%, and basic mates now found at depth 13-18, which v11 never reached).
+Mate distances stay consistent between depths (no wrong or growing mate scores) thanks to the v12.3 conversion.
+No match yet: v12.3 vs v11 to play.
+
+### Lichess (bot: TorrinoBOT)
+Online from: 25-10-2026 to: -
+| Category | Starting rating | Final rating | Games | Results W-L-D |
+|----------|-----------------|--------------|-------|---------------|
+| Bullet   |                 |              |       |               |
+| Blitz    |                 |              |       |               |

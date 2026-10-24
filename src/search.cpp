@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include "search.h"
 #include "movegen.h"
+#include "tt.h"
 using namespace std::chrono;
 
 long long nodesCount = 0;
@@ -77,6 +78,18 @@ int negamax(Board &board, int depth, int alpha, int beta, int ply){
         return quiescence(board, alpha, beta);
     }
 
+    // Transposition Table - TT
+    TTentry entry;
+    Move ttMove = NULL_MOVE;
+    if (probeTT(board.hash, entry)) {
+        ttMove = entry.move;
+        if (entry.depth >= depth) {
+            int score = scoreFromTT(entry.score, ply);
+            if (entry.flag == TT_EXACT)                         return score;
+            if (entry.flag == TT_LOWER && score >= beta)        return score;
+            if (entry.flag == TT_UPPER && score <= alpha)       return score; 
+        }
+    }
 
     /*
         Genera SOLO mosse Pseudo legali, controlla la legalita direttamente
@@ -88,9 +101,20 @@ int negamax(Board &board, int depth, int alpha, int beta, int ply){
 
     int scores[256];
     scoreMoves(board, list, scores, killers[ply][0], killers[ply][1]);
+    
+    // TT
+    if (!isSameMove(ttMove, NULL_MOVE)) {
+        for (int i = 0; i < list.count; i++) {
+            if (isSameMove(list.moves[i], ttMove)) {scores[i] = 30000; break;}
+        }
+    }
+    
 
     int bestScore = -INF;
     int legalMoves = 0;
+    Move bestMove = NULL_MOVE;
+
+    int alphaOrigin = alpha;
 
     for (int i = 0; i < list.count; i++) {
         pickMove(list, scores, i);
@@ -106,7 +130,8 @@ int negamax(Board &board, int depth, int alpha, int beta, int ply){
         int score = -negamax(board, depth - 1, -beta, -alpha, ply + 1);
         board.unmakeMove(list.moves[i], undo);
 
-        if (score > bestScore) bestScore = score;
+        
+        if (score > bestScore) {bestScore = score; bestMove = list.moves[i];}
         if (bestScore > alpha) alpha = bestScore;
         if (alpha >= beta) {
             if (isQuiet((Flags)list.moves[i].flags) && !isSameMove(killers[ply][0], list.moves[i])) {
@@ -120,6 +145,15 @@ int negamax(Board &board, int depth, int alpha, int beta, int ply){
     if (legalMoves == 0) {
         if (isInCheckVar) return MATE + ply;
         else return 0;
+    }
+
+
+    // stores the move in the Transposition Table
+    if(!stopSearch) {
+        TTFlags flag = TT_EXACT;
+        if (bestScore <= alphaOrigin) flag = TT_UPPER;
+        else if (bestScore >= beta) flag = TT_LOWER;
+        storeTT(board.hash, bestMove, scoreToTT(bestScore, ply), depth, flag);
     }
 
     return bestScore;
