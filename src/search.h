@@ -18,19 +18,15 @@ extern std::chrono::steady_clock::time_point deadline;
     facendo un ramo per WHITE e uno per BLACK. Negamax utilizza un solo caso
     e sfrutta il fatto che max(a, b) = -min(-a, -b)
 
-    !!!     TODO    !!!
-    - scrivere alpha beta pruning
-    - utilizzare move ordering per pruning
-    - utilizzare zobrist hashing
-    - utilizzare traspositions table
-
 */
+
+bool hasNonPawnMaterial(Board &board, Color side);                // helper funciton to determine if "side" has some NON PAWN material
 
 /*
     Restituisce il punteggio di quella mossa a profondita depth
     Implementa alpha beta pruning e move orderibng
 */
-int negamax(Board &board, int depth, int alpha, int beta, int ply);
+int negamax(Board &board, int depth, int alpha, int beta, int ply, bool allowNullMove = true);
 
 Move findBestMove(Board &board, int depth, Move prevMove);
 Move findBestMoveTime(Board &board, int softTime, int hardTime, int maxDepth);

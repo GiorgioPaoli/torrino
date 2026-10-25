@@ -14,6 +14,14 @@ Move killers[MAX_PLY][2];
 bool stopSearch = false;
 steady_clock::time_point deadline; 
 
+bool hasNonPawnMaterial(Board &board, Color side){
+    if ((board.pieceBB[side][KNIGHT] | board.pieceBB[side][BISHOP] |
+        board.pieceBB[side][ROOK]    | board.pieceBB[side][QUEEN]) != 0) {
+            return true;
+    } 
+    return false;
+}
+
 
 int quiescence(Board &board, int alpha, int beta){
     nodesCount++;
@@ -57,7 +65,7 @@ int quiescence(Board &board, int alpha, int beta){
 }
 
 
-int negamax(Board &board, int depth, int alpha, int beta, int ply){
+int negamax(Board &board, int depth, int alpha, int beta, int ply, bool allowNullMove){
     nodesCount++;
     // time management
     if ((nodesCount & 2047) == 0) {
@@ -79,6 +87,8 @@ int negamax(Board &board, int depth, int alpha, int beta, int ply){
     }
 
     // Transposition Table - TT
+    // if the entry was already in the TT, the depth it came from is greater than the current depth and the score produces a cut off, 
+    // it instantly returns the score
     TTentry entry;
     Move ttMove = NULL_MOVE;
     if (probeTT(board.hash, entry)) {
@@ -90,7 +100,19 @@ int negamax(Board &board, int depth, int alpha, int beta, int ply){
             if (entry.flag == TT_UPPER && score <= alpha)       return score; 
         }
     }
+    
+    // Tries a null move, gives a free move to the opponent, if the score is still better -> cutoff
+    if (allowNullMove && !isInCheckVar && depth >= 3 && hasNonPawnMaterial(board, us)) {
+        int reducedDepth = 2;
+        UndoInfo undoNull;
+        board.makeNullMove(undoNull);
+        int score = -negamax(board, depth - 1 - reducedDepth, -beta, -beta + 1, ply + 1, false);
+        board.unmakeNullMove(undoNull);
 
+        if (stopSearch) return 0;
+        if (score >= beta) return beta;
+    }
+    
     /*
         Genera SOLO mosse Pseudo legali, controlla la legalita direttamente
         dentro il ciclo for, e alla fine se non ci sono mosse legali
@@ -127,7 +149,22 @@ int negamax(Board &board, int depth, int alpha, int beta, int ply){
         }
         
         legalMoves++;
-        int score = -negamax(board, depth - 1, -beta, -alpha, ply + 1);
+        // PVS Principal Variation Search
+        // Thanks to Move Ordering and TT, the first move is probably the best
+        // so we just need to prove that the other moves are not better than this one
+        // if we find that a move is better, we do the full search
+        int score;
+        if (legalMoves==1){
+            score = -negamax(board, depth - 1, -beta, -alpha, ply + 1);
+        }
+        else {
+            // -alpha - 1, -alpha -> zero window
+            score = -negamax(board, depth - 1, -alpha - 1, -alpha, ply + 1);
+            if (score > alpha && score < beta) {
+                // might be better -> full search
+                score = -negamax(board, depth - 1, -beta, -alpha, ply + 1);
+            } 
+        }
         board.unmakeMove(list.moves[i], undo);
 
         

@@ -481,3 +481,50 @@ Online from: 25-10-2026 to: 25-10-2026
 | Blitz    | 1824            | 1872 (+48)   | 17    |
 
 Torrino lost Elo in Bullet, it's probably just noise since it only played 29 games compared the 76 games it played during v11.
+
+
+
+## v13 - Pruning
+Commit: tag `v13`
+Goal: search fewer nodes for the same depth by skipping moves that almost certainly do not matter, so the engine
+reaches deeper in the same time. Steps: v13.1 PVS, v13.2 null-move pruning, v13.3 LMR (to do).
+The match vs v12 will be played on the final v13; every step is checked with perft, node counts and benchmarks.
+
+
+### v13.1 - Principal variation search (PVS)
+- In negamax the first legal move is searched with the full window; the others with a zero window
+  (alpha, alpha + 1) that only proves they are not better. If one scores above alpha (and below beta), it is
+  searched again with the full window. The root search is unchanged
+
+Checks: same best moves and scores as v12.3 at depth 7.
+Result: -7% nodes, -10% time to depth 7.
+
+
+### v13.2 - Null-move pruning
+- Before generating moves, the side to move "passes" (makeNullMove: switch side, clear en passant, update the
+  hash, treated as irreversible for repetitions) and the position is searched at depth - 1 - R (R = 2) with a zero
+  window around beta. If the score is still ≥ beta, the node is cut (returns beta)
+- Not used when in check, at depth < 3, right after another null move (new negamax parameter allowNullMove), or
+  when the side to move has only king and pawns (zugzwang; hasNonPawnMaterial)
+
+Checks: perft correct; makeNullMove/unmakeNullMove verified at 177,905 positions (hash equal to a full
+recomputation, state restored exactly, 0 errors); same best moves and scores as v12.3 at depth 7.
+Result: -65% nodes and -66% time to depth 7 compared with v12.3; 1-3 plies deeper in 3 seconds.
+
+
+### Speed (depth 7 on the 6 standard positions, fastest of 10 runs; details in `docs/notes/BENCH_v13.md`)
+| Position | v12.3 nodes | v13.1 nodes | v13.2 nodes | v12.3 time | v13.1 time | v13.2 time | v13.2 vs v12.3 (time) |
+|----------|-------------|-------------|-------------|------------|------------|------------|-----------------------|
+| start    | 494,818     | 485,720     | 229,765     | 0.165 s    | 0.164 s    | 0.070 s    | -58%                  |
+| kiwipete | 3,653,450   | 3,406,719   | 1,828,821   | 1.617 s    | 1.433 s    | 0.693 s    | -57%                  |
+| pos3     | 121,410     | 115,903     | 56,538      | 0.027 s    | 0.024 s    | 0.011 s    | -57%                  |
+| pos4     | 632,291     | 624,800     | 342,361     | 0.248 s    | 0.245 s    | 0.136 s    | -45%                  |
+| pos5     | 1,919,909   | 1,897,868   | 393,597     | 0.562 s    | 0.559 s    | 0.111 s    | -80%                  |
+| pos6     | 3,644,392   | 3,200,526   | 842,827     | 1.325 s    | 1.114 s    | 0.302 s    | -77%                  |
+| **Total**| **10.47M**  | **9.73M (-7%)** | **3.69M (-65%)** | **3.94 s** | **3.54 s (-10%)** | **1.32 s (-66%)** | **-66%** |
+
+Depth reached in 3 seconds (`go movetime 3000`): v12.3 8 / 7 / 10 / 8 / 8 / 7, v13.2 10 / 8 / 13 / 10 / 9 / 8
+(start, kiwipete, pos3, pos4, pos5, pos6).
+King and rook vs king: v13.2 announces mate after 6.9 s (depth 18) and mate 16 from depth 19 (stable up to depth 21);
+v12.3 needed 13.0 s for its first mate (depth 17).
+

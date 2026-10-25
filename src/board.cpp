@@ -389,6 +389,32 @@ void Board::unmakeMove(Move m, const UndoInfo &undo){
     historyCount--;
 }
 
+void Board::makeNullMove(UndoInfo &undo){
+    undo.enPassantSquare = enPassantSquare;
+    undo.halfMoveClock = halfMoveClock;
+    undo.hash = hash;
+
+    if (enPassantSquare != -1) {
+        hash ^= enPassantKeys[fileOf(enPassantSquare)];
+        enPassantSquare = -1;
+    }
+
+    sideToMove = opposite(sideToMove);
+    hash ^= sideKey;
+
+    halfMoveClock = 0;
+
+    history[historyCount++] = hash;
+}
+
+void Board::unmakeNullMove(const UndoInfo &undo){
+    sideToMove = opposite(sideToMove);
+    enPassantSquare = undo.enPassantSquare;
+    halfMoveClock = undo.halfMoveClock;
+    hash = undo.hash;
+    historyCount--;
+}
+
 uint64_t Board::computeHash() {
     uint64_t key = 0;
     for (int sq = 0; sq < 64; sq++) {

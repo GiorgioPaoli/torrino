@@ -57,6 +57,8 @@ public:
     // --- MOVE FUNCTIONS ---
     void makeMove(Move m, UndoInfo &undo);
     void unmakeMove(Move m, const UndoInfo &undo);
+    void makeNullMove(UndoInfo &undo);
+    void unmakeNullMove(const UndoInfo &undo);
     
     uint64_t computeHash();
 
