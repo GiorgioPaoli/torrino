@@ -97,7 +97,7 @@ void uciLoop(){
             } else {
                 int timeLeft = (board.sideToMove == WHITE) ? wtime : btime;
                 int inc      = (board.sideToMove == WHITE) ? winc : binc;
-                softTime = timeLeft / 30 + inc;
+                softTime = timeLeft / 20 + inc;
                 hardTime = min(softTime * 2, timeLeft / 6);
                 // safety net
                 if (softTime > timeLeft - 100) softTime = timeLeft - 100;

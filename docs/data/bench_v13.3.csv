@@ -1,0 +1,55 @@
+test,version,exe,position,depth,movetime_ms,best_seconds,median_seconds,runs,nodes,score,bestmove,depth_reached
+time_to_depth7,v12.3,engine_v12.3.exe,start,7,,0.1534,0.1755,10,494818,cp 50,b1c3,
+time_to_depth7,v13.2,engine_v13.2.exe,start,7,,0.069,0.0761,10,229765,cp 50,b1c3,
+time_to_depth7,v13.3,engine_v13.3.exe,start,7,,0.0265,0.0308,10,73871,cp 50,b1c3,
+time_to_depth7,v12.3,engine_v12.3.exe,kiwipete,7,,1.5009,1.6047,10,3653450,cp -22,e2a6,
+time_to_depth7,v13.2,engine_v13.2.exe,kiwipete,7,,0.7177,0.7657,10,1828821,cp -22,e2a6,
+time_to_depth7,v13.3,engine_v13.3.exe,kiwipete,7,,0.3985,0.4595,10,880693,cp -22,e2a6,
+time_to_depth7,v12.3,engine_v12.3.exe,pos3,7,,0.0257,0.0298,10,121410,cp 15,b4f4,
+time_to_depth7,v13.2,engine_v13.2.exe,pos3,7,,0.012,0.0132,10,56538,cp 15,b4f4,
+time_to_depth7,v13.3,engine_v13.3.exe,pos3,7,,0.0071,0.0076,10,31789,cp 15,b4f4,
+time_to_depth7,v12.3,engine_v12.3.exe,pos4,7,,0.2589,0.2732,10,632291,cp -461,c4c5,
+time_to_depth7,v13.2,engine_v13.2.exe,pos4,7,,0.1356,0.1436,10,342361,cp -461,c4c5,
+time_to_depth7,v13.3,engine_v13.3.exe,pos4,7,,0.0791,0.0848,10,181879,cp -461,c4c5,
+time_to_depth7,v12.3,engine_v12.3.exe,pos5,7,,0.5596,0.5852,10,1919909,cp 470,d7c8q,
+time_to_depth7,v13.2,engine_v13.2.exe,pos5,7,,0.1135,0.1307,10,393597,cp 470,d7c8q,
+time_to_depth7,v13.3,engine_v13.3.exe,pos5,7,,0.0615,0.0692,10,183799,cp 456,d7c8q,
+time_to_depth7,v12.3,engine_v12.3.exe,pos6,7,,1.2482,1.3172,10,3644392,cp 75,c3d5,
+time_to_depth7,v13.2,engine_v13.2.exe,pos6,7,,0.3022,0.3394,10,842827,cp 75,c3d5,
+time_to_depth7,v13.3,engine_v13.3.exe,pos6,7,,0.1569,0.1694,10,396571,cp 75,c3d5,
+fixed_time_3s,v12.3,engine_v12.3.exe,start,,3000,,,1,2076689,,,8
+fixed_time_3s,v12.3,engine_v12.3.exe,start,,3000,,,2,2076689,,,8
+fixed_time_3s,v12.3,engine_v12.3.exe,start,,3000,,,3,2076689,,,8
+fixed_time_3s,v13.3,engine_v13.3.exe,start,,3000,,,1,3623481,,,11
+fixed_time_3s,v13.3,engine_v13.3.exe,start,,3000,,,2,3623481,,,11
+fixed_time_3s,v13.3,engine_v13.3.exe,start,,3000,,,3,3623481,,,11
+fixed_time_3s,v12.3,engine_v12.3.exe,kiwipete,,3000,,,1,3653450,,,7
+fixed_time_3s,v12.3,engine_v12.3.exe,kiwipete,,3000,,,2,3653450,,,7
+fixed_time_3s,v12.3,engine_v12.3.exe,kiwipete,,3000,,,3,3653450,,,7
+fixed_time_3s,v13.3,engine_v13.3.exe,kiwipete,,3000,,,1,5465812,,,9
+fixed_time_3s,v13.3,engine_v13.3.exe,kiwipete,,3000,,,2,5465812,,,9
+fixed_time_3s,v13.3,engine_v13.3.exe,kiwipete,,3000,,,3,5465812,,,9
+fixed_time_3s,v12.3,engine_v12.3.exe,pos3,,3000,,,1,3801000,,,10
+fixed_time_3s,v12.3,engine_v12.3.exe,pos3,,3000,,,2,3801000,,,10
+fixed_time_3s,v12.3,engine_v12.3.exe,pos3,,3000,,,3,3801000,,,10
+fixed_time_3s,v13.3,engine_v13.3.exe,pos3,,3000,,,1,8091714,,,15
+fixed_time_3s,v13.3,engine_v13.3.exe,pos3,,3000,,,2,8091714,,,15
+fixed_time_3s,v13.3,engine_v13.3.exe,pos3,,3000,,,3,8091714,,,15
+fixed_time_3s,v12.3,engine_v12.3.exe,pos4,,3000,,,1,2626235,,,8
+fixed_time_3s,v12.3,engine_v12.3.exe,pos4,,3000,,,2,2626235,,,8
+fixed_time_3s,v12.3,engine_v12.3.exe,pos4,,3000,,,3,2626235,,,8
+fixed_time_3s,v13.3,engine_v13.3.exe,pos4,,3000,,,1,7177134,,,11
+fixed_time_3s,v13.3,engine_v13.3.exe,pos4,,3000,,,2,7177134,,,11
+fixed_time_3s,v13.3,engine_v13.3.exe,pos4,,3000,,,3,2099505,,,10
+fixed_time_3s,v12.3,engine_v12.3.exe,pos5,,3000,,,1,7075996,,,8
+fixed_time_3s,v12.3,engine_v12.3.exe,pos5,,3000,,,2,7075996,,,8
+fixed_time_3s,v12.3,engine_v12.3.exe,pos5,,3000,,,3,7075996,,,8
+fixed_time_3s,v13.3,engine_v13.3.exe,pos5,,3000,,,1,7649113,,,11
+fixed_time_3s,v13.3,engine_v13.3.exe,pos5,,3000,,,2,3054485,,,10
+fixed_time_3s,v13.3,engine_v13.3.exe,pos5,,3000,,,3,3054485,,,10
+fixed_time_3s,v12.3,engine_v12.3.exe,pos6,,3000,,,1,3644392,,,7
+fixed_time_3s,v12.3,engine_v12.3.exe,pos6,,3000,,,2,818678,,,6
+fixed_time_3s,v12.3,engine_v12.3.exe,pos6,,3000,,,3,3644392,,,7
+fixed_time_3s,v13.3,engine_v13.3.exe,pos6,,3000,,,1,1983027,,,8
+fixed_time_3s,v13.3,engine_v13.3.exe,pos6,,3000,,,2,1983027,,,8
+fixed_time_3s,v13.3,engine_v13.3.exe,pos6,,3000,,,3,1983027,,,8

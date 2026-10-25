@@ -101,6 +101,7 @@ int negamax(Board &board, int depth, int alpha, int beta, int ply, bool allowNul
         }
     }
     
+    // Null Move 
     // Tries a null move, gives a free move to the opponent, if the score is still better -> cutoff
     if (allowNullMove && !isInCheckVar && depth >= 3 && hasNonPawnMaterial(board, us)) {
         int reducedDepth = 2;
@@ -159,7 +160,16 @@ int negamax(Board &board, int depth, int alpha, int beta, int ply, bool allowNul
         }
         else {
             // -alpha - 1, -alpha -> zero window
-            score = -negamax(board, depth - 1, -alpha - 1, -alpha, ply + 1);
+            if (depth >= 3 && legalMoves > 3 && isQuiet((Flags)list.moves[i].flags) && 
+                !isSameMove(list.moves[i], killers[ply][0]) && !isSameMove(list.moves[i], killers[ply][1]) &&
+                !isInCheckVar && !board.isInCheck(board.sideToMove)) {
+                    int reducedDepth = 1;
+                    score = -negamax(board, depth - 1 - reducedDepth, -alpha - 1, -alpha, ply + 1);
+                    if (score > alpha) score = -negamax(board, depth - 1, -alpha - 1, -alpha, ply + 1);
+            } 
+            else {
+                score = -negamax(board, depth - 1, -alpha - 1, -alpha, ply + 1);
+            }
             if (score > alpha && score < beta) {
                 // might be better -> full search
                 score = -negamax(board, depth - 1, -beta, -alpha, ply + 1);
@@ -325,9 +335,13 @@ Move findBestMoveTime(Board &board, int softTime, int hardTime, int maxDepth){
 
         if (prevIterTime > 5) {
             factor = (double)lastIterTime / prevIterTime;
-            if (factor > 10) factor = 10;
+            if (factor > 6) factor = 6;
             if (factor < 2) factor = 2;
         } 
+        
+        if (elapsed >= softTime) break;
+        if (elapsed + lastIterTime * factor <= hardTime) continue;
+        if (elapsed < softTime * 0.3) continue;
         
         if (elapsed + lastIterTime * factor > hardTime) break;
     }

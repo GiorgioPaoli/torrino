@@ -487,7 +487,7 @@ Torrino lost Elo in Bullet, it's probably just noise since it only played 29 gam
 ## v13 - Pruning
 Commit: tag `v13`
 Goal: search fewer nodes for the same depth by skipping moves that almost certainly do not matter, so the engine
-reaches deeper in the same time. Steps: v13.1 PVS, v13.2 null-move pruning, v13.3 LMR (to do).
+reaches deeper in the same time. Steps: v13.1 PVS, v13.2 null-move pruning, v13.3 late move reductions (LMR).
 The match vs v12 will be played on the final v13; every step is checked with perft, node counts and benchmarks.
 
 
@@ -512,19 +512,91 @@ recomputation, state restored exactly, 0 errors); same best moves and scores as 
 Result: -65% nodes and -66% time to depth 7 compared with v12.3; 1-3 plies deeper in 3 seconds.
 
 
-### Speed (depth 7 on the 6 standard positions, fastest of 10 runs; details in `docs/notes/BENCH_v13.md`)
-| Position | v12.3 nodes | v13.1 nodes | v13.2 nodes | v12.3 time | v13.1 time | v13.2 time | v13.2 vs v12.3 (time) |
-|----------|-------------|-------------|-------------|------------|------------|------------|-----------------------|
-| start    | 494,818     | 485,720     | 229,765     | 0.165 s    | 0.164 s    | 0.070 s    | -58%                  |
-| kiwipete | 3,653,450   | 3,406,719   | 1,828,821   | 1.617 s    | 1.433 s    | 0.693 s    | -57%                  |
-| pos3     | 121,410     | 115,903     | 56,538      | 0.027 s    | 0.024 s    | 0.011 s    | -57%                  |
-| pos4     | 632,291     | 624,800     | 342,361     | 0.248 s    | 0.245 s    | 0.136 s    | -45%                  |
-| pos5     | 1,919,909   | 1,897,868   | 393,597     | 0.562 s    | 0.559 s    | 0.111 s    | -80%                  |
-| pos6     | 3,644,392   | 3,200,526   | 842,827     | 1.325 s    | 1.114 s    | 0.302 s    | -77%                  |
-| **Total**| **10.47M**  | **9.73M (-7%)** | **3.69M (-65%)** | **3.94 s** | **3.54 s (-10%)** | **1.32 s (-66%)** | **-66%** |
+### v13.3 - Late move reductions (LMR)
+- Moves late in the ordering are searched one ply shallower (R = 1) with a zero window; if one scores above alpha
+  it is searched again at full depth, then (as in PVS) with the full window if it is really better
+- Only quiet moves after the first 3 legal moves, at depth ≥ 3, not killers, not when in check and not moves that
+  give check; captures, promotions, killers and checks are always searched at full depth
 
-Depth reached in 3 seconds (`go movetime 3000`): v12.3 8 / 7 / 10 / 8 / 8 / 7, v13.2 10 / 8 / 13 / 10 / 9 / 8
-(start, kiwipete, pos3, pos4, pos5, pos6).
-King and rook vs king: v13.2 announces mate after 6.9 s (depth 18) and mate 16 from depth 19 (stable up to depth 21);
-v12.3 needed 13.0 s for its first mate (depth 17).
+Checks: perft correct; same best moves as v12.3 on all 6 positions at depth 7 (same scores except pos5, +456
+instead of +470).
+Result: -53% nodes and -46% time to depth 7 compared with v13.2; NPS -12% (a check test per quiet move and the
+re-searches), more than repaid by the smaller tree.
+
+
+### Speed (depth 7 on the 6 standard positions, fastest of 10 runs, one run with the three engines; details in `docs/notes/BENCH_v13.md`)
+| Position | v12.3 nodes | v13.2 nodes | v13.3 nodes | v12.3 time | v13.2 time | v13.3 time | v13.3 vs v12.3 (time) |
+|----------|-------------|-------------|-------------|------------|------------|------------|-----------------------|
+| start    | 494,818     | 229,765     | 73,871      | 0.153 s    | 0.069 s    | 0.026 s    | -83%                  |
+| kiwipete | 3,653,450   | 1,828,821   | 880,693     | 1.501 s    | 0.718 s    | 0.399 s    | -73%                  |
+| pos3     | 121,410     | 56,538      | 31,789      | 0.026 s    | 0.012 s    | 0.007 s    | -72%                  |
+| pos4     | 632,291     | 342,361     | 181,879     | 0.259 s    | 0.136 s    | 0.079 s    | -69%                  |
+| pos5     | 1,919,909   | 393,597     | 183,799     | 0.560 s    | 0.113 s    | 0.061 s    | -89%                  |
+| pos6     | 3,644,392   | 842,827     | 396,571     | 1.248 s    | 0.302 s    | 0.157 s    | -87%                  |
+| **Total**| **10.47M**  | **3.69M (-65%)** | **1.75M (-83%)** | **3.75 s** | **1.35 s (-64%)** | **0.73 s (-81%)** | **-81%** |
+
+PVS alone (v13.1, measured in an earlier run): -7% nodes, -10% time compared with v12.3.
+
+Depth reached in 3 seconds (`go movetime 3000`, start / kiwipete / pos3 / pos4 / pos5 / pos6):
+v12.3 8 / 7 / 10 / 8 / 8 / 7, v13.2 10 / 8 / 13 / 10 / 9 / 8, v13.3 11 / 9 / 15 / 11 / 11 / 8.
+
+Mates (`go movetime 20000`): king and rook vs king, first mate after 13.0 s (v12.3, mate 19), 6.9 s (v13.2, mate 22,
+then mate 16 from depth 19) and 9.2 s (v13.3, mate 17); king and queen vs king, mate 7 at depth 13 for v12.3 and
+v13.2 (about 4.3 s), mate 11 at depth 15 for v13.3 (4.2 s). With LMR the quiet mating moves are searched less deeply,
+so the first mate found can be longer than the shortest one.
+
+#### Conclusions
+The three pruning steps cut the tree at depth 7 by 83% and the time by 81% compared with v12, with the same best
+moves: in 3 seconds the engine now reaches 1 to 5 plies deeper (depth 8-15 instead of 7-10). Null-move pruning gives
+the largest part (-64%), LMR roughly halves the rest, PVS adds a little and prepares the zero-window searches.
+To check in the match vs v12: whether the reductions miss tactics often enough to cost games.
+
+
+### v13.4 - Time management (Lichess test, no local match yet)
+Problem: at 60+1 the bot ended games with about 25 s on the clock (time it could have used to search deeper), and
+`go movetime` stopped early (a 20 s search stopped after 4.2 s). The soft limit passed by `uci.cpp` was never used:
+the only stop rule was "do not start the next depth unless elapsed + last iteration time × growth factor fits under
+the hard limit", with the growth factor clamped to 2-10.
+History: v8 used "do not start a new depth after half of the soft limit", which overspent in the middlegame; v9
+replaced it with the prediction, which turned out too cautious.
+
+New rule, after each completed depth (findBestMoveTime):
+- stop if elapsed ≥ soft limit (never overspend voluntarily)
+- continue if elapsed + predicted time of the next depth ≤ hard limit
+- continue if elapsed < 30% of the soft limit (still early: start it anyway, the hard deadline interrupts it and the
+  best move of the partial depth is kept)
+- otherwise stop
+Growth factor clamped to 2-6 (with pruning, 10 was too pessimistic). With `go movetime` the soft limit is huge, so
+the search runs to the full movetime.
+Check on 5 positions with 4 clocks (25+1, 55+1, 5+1, 60+0): times and depths almost unchanged compared with v13.3:
+with v13's pruning each depth costs only 2-4× the previous one, so the old prediction was rarely the limit.
+The ~25 s left at the end comes from the formula soft = timeLeft / 30 + inc (with every move at full soft time,
+60 × (29/30)^50 ≈ 11 s would be left after 50 moves; many moves use less). Change for the Lichess test:
+soft = timeLeft / 20 + inc (≈ 4.6 s left after 50 moves at full soft time), hard = min(2 × soft, timeLeft / 6) unchanged.
+To check: clock left at the end of 60+1 games and losses on time; then a 60+1 match vs v13.3 in cutechess.
+
+#### Local tests (cutechess)
+| Opponent | TC     | Games | Results W-L-D | Elo        |
+|----------|--------|-------|---------------|------------|
+| v11      | 10+0.1 | 100   | 61 - 22 - 17  | +143 ±67   | 
+| SF2000   | 10+0.1 | 100   | 68 - 26 - 6   | +155 ±73   |
+
+### Lichess (bot: TorrinoBOT)
+Online from: 25-10-2026 to: 
+| Category | Starting rating | Final rating | Games |
+|----------|-----------------|--------------|-------|
+| Bullet   | 2037            |    |     |
+| Blitz    | 1824            |    |     |
+
+Sources:
+- [Time Management - Chess Programming Wiki](https://chessprogramming.org/Time_Management): soft (optimum) limit checked
+  after each iteration, hard (maximum) limit checked during the search
+- [VeryChess 0.3.0 release - TalkChess](https://talkchess.com/viewtopic.php?p=995986): a soft limit used only to decide
+  whether to start an iteration overspends 1.5-4×, since each iteration costs about twice the previous one
+- [Time management and estimating search times - TalkChess](https://talkchess.com/viewtopic.php?p=894313): predictions
+  from previous iterations oscillate (the TT is already filled); skipping iterations that will not finish is a compromise
+- [Easy moves and best-move stability - TalkChess](https://talkchess.com/viewtopic.php?p=402413): spend less time when the
+  best move is stable across iterations, more when it changes (possible next step)
+- [Crafty time.c](https://sources.debian.org/src/crafty/23.4-6/time.c/): example implementation (easy moves stop at
+  about 36% of the limit, the hard limit aborts the search)
 
