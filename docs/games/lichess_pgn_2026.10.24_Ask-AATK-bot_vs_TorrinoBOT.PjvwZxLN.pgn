@@ -1,0 +1,26 @@
+[Event "rated bullet game"]
+[Site "https://lichess.org/game/PjvwZxLN"]
+[Date "2026.10.24"]
+[Round "-"]
+[White "Ask-AATK-bot"]
+[Black "TorrinoBOT"]
+[Result "1-0"]
+[GameId "PjvwZxLN"]
+[UTCDate "2026.10.24"]
+[UTCTime "13:03:53"]
+[WhiteElo "2266"]
+[BlackElo "1991"]
+[WhiteRatingDiff "+2"]
+[BlackRatingDiff "-2"]
+[WhiteTitle "BOT"]
+[BlackTitle "BOT"]
+[Variant "Standard"]
+[TimeControl "60+2"]
+[ECO "B00"]
+[Opening "Nimzowitsch Defense: El Columpio Defense"]
+[Termination "Normal"]
+[Annotator "lichess.org"]
+
+1. e4 { [%clk 0:01:00] } 1... Nc6 { [%clk 0:01:00] } 2. Nf3 { [%clk 0:01:02] } 2... Nf6 { [%clk 0:00:57] } 3. e5 { [%clk 0:01:00] } 3... Ng4 { [%clk 0:00:55] } { B00 Nimzowitsch Defense: El Columpio Defense } 4. d4 { [%clk 0:01:00] } 4... d6 { [%clk 0:00:51] } 5. h3 { [%clk 0:00:59] } 5... dxe5 { [%clk 0:00:47] } 6. hxg4 { [%clk 0:00:59] } 6... Bxg4 { [%clk 0:00:47] } 7. d5 { [%clk 0:00:58] } 7... Nd4 { [%clk 0:00:47] } 8. c3 { [%clk 0:00:58] } 8... Nxf3+ { [%clk 0:00:47] } 9. gxf3 { [%clk 0:00:53] } 9... Bd7 { [%clk 0:00:48] } 10. Qe2 { [%clk 0:00:48] } 10... e6 { [%clk 0:00:48] } 11. Qxe5 { [%clk 0:00:46] } 11... f6 { [%clk 0:00:42] } 12. Qe2 { [%clk 0:00:46] } 12... Qe7 { [%clk 0:00:43] } 13. c4 { [%clk 0:00:45] } 13... exd5 { [%clk 0:00:43] } 14. cxd5 { [%clk 0:00:40] } 14... O-O-O { [%clk 0:00:43] } 15. Be3 { [%clk 0:00:39] } 15... Qe5 { [%clk 0:00:42] } 16. Nc3 { [%clk 0:00:39] } 16... Bb4 { [%clk 0:00:41] } 17. Qc4 { [%clk 0:00:38] } 17... Bxc3+ { [%clk 0:00:36] } 18. bxc3 { [%clk 0:00:37] } 18... Bf5 { [%clk 0:00:37] } 19. O-O-O { [%clk 0:00:36] } 19... Kb8 { [%clk 0:00:33] } 20. Bf4 { [%clk 0:00:35] } 20... Qe7 { [%clk 0:00:33] } 21. d6 { [%clk 0:00:35] } 21... cxd6 { [%clk 0:00:33] } 22. Qb4 { [%clk 0:00:33] } 22... Ka8 { [%clk 0:00:33] } 23. Be3 { [%clk 0:00:27] } 23... b6 { [%clk 0:00:34] } 24. Rh4 { [%clk 0:00:21] } 24... h6 { [%clk 0:00:34] } 25. Rhd4 { [%clk 0:00:17] } 25... Qc7 { [%clk 0:00:30] } 26. Bc4 { [%clk 0:00:17] } 26... Bg6 { [%clk 0:00:31] } 27. Bd5+ { [%clk 0:00:14] } 27... Kb8 { [%clk 0:00:31] } 28. Rc4 { [%clk 0:00:15] } 28... Be8 { [%clk 0:00:32] } 29. Rxc7 { [%clk 0:00:16] } 29... Kxc7 { [%clk 0:00:32] } 30. Qc4+ { [%clk 0:00:17] } 30... Kb8 { [%clk 0:00:32] } 31. Qa6 { [%clk 0:00:18] } 31... Rd7 { [%clk 0:00:33] } 32. Bf4 { [%clk 0:00:18] } 32... Kc7 { [%clk 0:00:33] } 33. Qb7+ { [%clk 0:00:19] } 33... Kd8 { [%clk 0:00:35] } 34. Qb8+ { [%clk 0:00:19] } 34... Ke7 { [%clk 0:00:37] } 35. Re1+ { [%clk 0:00:20] } 35... Kf8 { [%clk 0:00:39] } 36. Qxe8# { [%clk 0:00:20] } { White wins by checkmate. } 1-0
+
+
