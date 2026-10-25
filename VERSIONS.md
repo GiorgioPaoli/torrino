@@ -392,7 +392,7 @@ Online from: 23-10-2026   to: 24-10-2026
 
 
 ## v12 - Transposition table
-Commit: in progress on `main` (tag `v12` after the final match)
+Commit: tag `v12`
 Goal: remember positions already searched (Zobrist key → best move, score, depth, bound) so the same depth needs
 far fewer nodes. Developed in two steps, v12.1 and v12.3 (there is no separate v12.2 build).
 
@@ -450,11 +450,34 @@ The transposition table cuts the tree at depth 7 by 65% and the time by 63%, wit
 The TT move alone (v12.1) gives -25%; the cutoffs add the rest.
 In endgames the effect is much larger (pos3 -82%, and basic mates now found at depth 13-18, which v11 never reached).
 Mate distances stay consistent between depths (no wrong or growing mate scores) thanks to the v12.3 conversion.
-No match yet: v12.3 vs v11 to play.
+
+#### Local tests (cutechess)
+| Opponent | TC     | Games | Results W-L-D | Elo        |
+|----------|--------|-------|---------------|------------|
+| v11      | 10+0.1 | 100   | 61 - 22 - 17  | +143 ±67   | 
+| SF2000   | 10+0.1 | 100   | 68 - 26 - 6   | +155 ±73   |
+
+Both LOS 100%, no losses on time. vs v11: as White 31 - 14 - 5, as Black 30 - 8 - 12.
+vs SF2000: 71% (v10 scored 55.5% against the same opponent).
+
+Average depth in the matches (from the PGNs, `tools/pgn_depth_stats.py`):
+| Engine        | Moves 10-40 | All moves | Time/move |
+|---------------|-------------|-----------|-----------|
+| v11           | 5.70        | 6.08      | 0.235 s   |
+| v12 (vs v11)  | 6.31        | 6.99      | 0.234 s   |
+| v12 (vs SF)   | 6.25        | 7.22      | 0.242 s   |
+
+v12 searches about 0.6 plies deeper in the middlegame and 0.9 plies deeper over the whole game at the same
+time per move, in line with the benchmark (same depth in about 1/3 of the time).
+
+Tested at 10+0.1 like the previous versions. The benefit of the transposition table may differ at longer time controls (more transpositions at higher depth, but smaller Elo per extra ply and a fuller table); not measured.
+
 
 ### Lichess (bot: TorrinoBOT)
-Online from: 25-10-2026 to: -
-| Category | Starting rating | Final rating | Games | Results W-L-D |
-|----------|-----------------|--------------|-------|---------------|
-| Bullet   |                 |              |       |               |
-| Blitz    |                 |              |       |               |
+Online from: 25-10-2026 to: 25-10-2026
+| Category | Starting rating | Final rating | Games |
+|----------|-----------------|--------------|-------|
+| Bullet   | 2037            | 2002 (-35)   | 29    |
+| Blitz    | 1824            | 1872 (+48)   | 17    |
+
+Torrino lost Elo in Bullet, it's probably just noise since it only played 29 games compared the 76 games it played during v11.
