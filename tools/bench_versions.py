@@ -23,6 +23,9 @@ ENGINES = [
     ("v8",    "engine_v8_Time_Management.exe"),
     ("v9",    "engine_v9_Time_Management_2.exe"),
     ("v10",   "engine_v10.exe"),
+    ("v11",   "engine_v11.exe"),          # = v11.3
+    ("v12",   "engine_v12.exe"),
+    ("v13",   "engine_v13.exe"),          # = v13.4
 ]
 
 # standard test positions (Chess Programming Wiki perft positions)

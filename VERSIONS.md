@@ -456,9 +456,10 @@ Mate distances stay consistent between depths (no wrong or growing mate scores) 
 |----------|--------|-------|---------------|------------|
 | v11      | 10+0.1 | 100   | 61 - 22 - 17  | +143 ±67   | 
 | SF2000   | 10+0.1 | 100   | 68 - 26 - 6   | +155 ±73   |
-
+| SF2100   | 10+0.1 | 100   | 61 - 34 - 5   | +96  ±69   |
+ 
 Both LOS 100%, no losses on time. vs v11: as White 31 - 14 - 5, as Black 30 - 8 - 12.
-vs SF2000: 71% (v10 scored 55.5% against the same opponent).
+vs SF2000: 71% (v10 scored 55.5% against the same opponent). vs SF2100: 63.5%, LOS 99.7%, no losses on time.
 
 Average depth in the matches (from the PGNs, `tools/pgn_depth_stats.py`):
 | Engine        | Moves 10-40 | All moves | Time/move |
@@ -477,7 +478,7 @@ Tested at 10+0.1 like the previous versions. The benefit of the transposition ta
 Online from: 25-10-2026 to: 25-10-2026
 | Category | Starting rating | Final rating | Games |
 |----------|-----------------|--------------|-------|
-| Bullet   | 2037            | 2002 (-35)   | 29    |
+| Bullet   | 2037            | 2010 (-27)   | 55    |
 | Blitz    | 1824            | 1872 (+48)   | 17    |
 
 Torrino lost Elo in Bullet, it's probably just noise since it only played 29 games compared the 76 games it played during v11.
@@ -578,15 +579,37 @@ To check: clock left at the end of 60+1 games and losses on time; then a 60+1 ma
 #### Local tests (cutechess)
 | Opponent | TC     | Games | Results W-L-D | Elo        |
 |----------|--------|-------|---------------|------------|
-| v11      | 10+0.1 | 100   | 61 - 22 - 17  | +143 ±67   | 
-| SF2000   | 10+0.1 | 100   | 68 - 26 - 6   | +155 ±73   |
+| v12      | 10+0.1 | 100   | 52 - 32 - 16  | +70 ±64    |
+| SF2000   | 10+0.1 | 100   | 78 - 19 - 3   | +235 ±86   |
+| SF2100   | 10+0.1 | 100   | 73 - 24 - 3   | +186 ±79   |
+| SF2200   | 10+0.1 | 100   | 62 - 34 - 4   | +100 ±71   |
+| SF2300   | 10+0.1 | 100   | 58 - 34 - 8   | +85 ±68    |
+| SF2400   | 10+0.1 | 100   | 48 - 44 - 8   | +14 ±66    |
+
+vs v12: LOS 98.5%, no losses on time; as White 26 - 17 - 7, as Black 26 - 15 - 9.
+vs SF2000: 79.5% (v12: 71%, v10: 55.5% against the same opponent), LOS 100%, no losses on time.
+vs SF2100: 74.5% (v12: 63.5%), LOS 100%, no losses on time.
+vs SF2200: 64%, LOS 99.8%, no losses on time.
+vs SF2300: 62%, LOS 99.4%, no losses on time. 2200 and 2300 give almost the same score: at 10+0.1 the limited
+Stockfish levels are compressed, so they are a rough reference scale, not calibrated ratings.
+vs SF2400: 52%, LOS 66%: about equal. On this scale v13 scores about 50% around Stockfish UCI_Elo 2400 at 10+0.1.
+
+Average depth in the match vs v12 (from the PGN, `tools/pgn_depth_stats.py`):
+| Engine | Moves 10-40 | All moves | Time/move |
+|--------|-------------|-----------|-----------|
+| v12    | 6.25        | 6.95      | 0.247 s   |
+| v13    | 8.43        | 9.01      | 0.256 s   |
+
+v13 searches about 2.2 plies deeper in the middlegame at the same time per move. The Elo gain (+70 ± 64) is smaller
+than the depth gain alone would suggest: the reductions (null move, LMR) make each ply less thorough, so a ply of
+v13 is not worth a full ply of v12. Still clearly positive (LOS 98.5%).
 
 ### Lichess (bot: TorrinoBOT)
 Online from: 25-10-2026 to: 
 | Category | Starting rating | Final rating | Games |
 |----------|-----------------|--------------|-------|
-| Bullet   | 2037            |    |     |
-| Blitz    | 1824            |    |     |
+| Bullet   | 2010            |    |     |
+| Blitz    | 1872            |    |     |
 
 Sources:
 - [Time Management - Chess Programming Wiki](https://chessprogramming.org/Time_Management): soft (optimum) limit checked
