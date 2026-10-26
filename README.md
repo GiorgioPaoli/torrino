@@ -366,4 +366,4 @@ which I also used as a tutor while learning the algorithms.
 
 ## License and contact
 
-License: [MIT](LICENSE) · Author: Giorgio Paoli · Contact: TODO
+License: [MIT](LICENSE) · Author: Giorgio Paoli · Contact: [paoli.2205754@studenti.uniroma1.it](mailto:paoli.2205754@studenti.uniroma1.it)
