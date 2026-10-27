@@ -623,3 +623,37 @@ Sources:
 - [Crafty time.c](https://sources.debian.org/src/crafty/23.4-6/time.c/): example implementation (easy moves stop at
   about 36% of the limit, the hard limit aborts the search)
 
+
+---
+
+## Round-robin of all versions (v4-v13)
+
+Finished on 27 October 2026: every version against every other one, 10+0.1, `aperture.pgn` openings with colours
+swapped, 50 games per pair, 2250 games, concurrency 2. PGN: `docs/matches/round_robin/round_robin_v4_v13.pgn`
+(kept out of `docs/matches` itself, so the depth statistics per version are not mixed with it).
+
+| Rank | Engine | Elo (pool) | Elo vs v4 | ±  | Score | Draws |
+|------|--------|------------|-----------|----|-------|-------|
+| 1    | v13    | +361       | +576      | 42 | 88.9% | 13.8% |
+| 2    | v12    | +254       | +469      | 37 | 81.2% | 13.1% |
+| 3    | v11    | +146       | +361      | 31 | 69.9% | 18.0% |
+| 4    | v10    | +68        | +283      | 28 | 59.7% | 24.2% |
+| 5    | v8     | -33        | +182      | 27 | 45.2% | 30.9% |
+| 6    | v9     | -48        | +167      | 26 | 43.1% | 33.8% |
+| 7    | v7     | -116       | +99       | 27 | 33.9% | 31.3% |
+| 8    | v6     | -161       | +54       | 25 | 28.3% | 42.4% |
+| 9    | v5     | -170       | +45       | 24 | 27.3% | 44.0% |
+| 10   | v4     | -215       | 0         | 27 | 22.4% | 35.1% |
+
+450 games per engine. 6 games lost on time out of 2250 (v4 2, v6 2, v10 1, v11 1). The laptop went to sleep
+during the night (Windows sleep timer); the tournament resumed on wake-up.
+
+#### Conclusions
+- One scale for all versions: v13 is about +576 Elo over v4. The chained matches (each version vs the previous one)
+  sum to +735 for the same steps: step-by-step self-play overestimates the gains.
+- Largest steps: v8 time management (+83), v10 evaluation (+116), v11 speed (+78), v12 transposition table (+108),
+  v13 pruning (+107).
+- v6 vs v5 (+9) and v9 vs v8 (-15) are within the uncertainty: no measurable gain at 10+0.1. v9 had been tested at
+  30+1 (+49 ± 66, 50 games), where its time management change matters more.
+- The draw rate falls from about 35-44% (v4-v6) to 13-14% (v12, v13): the strongest versions win most of their games
+  against the older ones.

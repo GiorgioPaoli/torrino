@@ -158,16 +158,19 @@ How to read the numbers:
 
 ### Strength across versions
 
-<!-- TODO: replace with the round-robin of all versions (one tournament, one Elo scale) when it is done. -->
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/images/elo_per_version_dark.png">
-  <img alt="Elo gained by each version against the previous one, with 95% intervals" src="docs/images/elo_per_version_light.png">
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/elo_round_robin_dark.png">
+  <img alt="Elo of every version from v4 to v13 on one scale, from a round-robin tournament, with 95% intervals" src="docs/images/elo_round_robin_light.png">
 </picture>
 
-Every version beat the previous one. The largest gains came from quiescence search (v4), the evaluation rework (v10),
-the speed work (v11) and the transposition table (v12). Gains measured against the previous version cannot simply be
-added up: self-play tends to exaggerate them, and the errors accumulate. The comparison with Stockfish below is the
-external check.
+All ten versions from v4 to v13 played each other in one round-robin tournament: 50 games per pair, 2250 games at
+10+0.1 (6 lost on time). This puts every version on the same scale: v13 is about **576 Elo** stronger than v4. The
+largest steps came from the time management (v8), the evaluation rework (v10), the speed work (v11), the
+transposition table (v12) and the pruning (v13). Differences between neighbours below about 40 Elo are within the
+uncertainty: v6 is level with v5, and v9 is not stronger than v8 at this time control (its time management change
+was tested at 30+1). The matches of each version against the previous one, summed, give +735 for the same versions:
+gains measured one step at a time tend to be overestimated. All results are in [VERSIONS.md](VERSIONS.md); the
+comparison with Stockfish below is the external check.
 
 ### Against Stockfish
 
@@ -242,7 +245,7 @@ Torrino plays without an opening book.
 | En passant edge cases | perft cross-checked against [python-chess](https://python-chess.readthedocs.io/) | pass |
 | Evaluation | colour-mirrored positions must evaluate identically | checked on every change |
 | Speed optimisations | identical node counts and best moves at fixed depth before and after | checked on every change |
-| Strength | matches against the previous version and against Stockfish | every version |
+| Strength | matches against the previous version and against Stockfish; round-robin of v4-v13 | every version |
 
 The perft, magic bitboard and null move checks can be rerun with the programs in [`tools/tests/`](tools/tests/)
 (build and run commands at the top of each file).

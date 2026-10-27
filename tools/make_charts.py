@@ -38,6 +38,10 @@ VS_SF = [("v5", -63, 67, 0, 41.0), ("v6", 24, 66, 0, 53.5), ("v7", 20, 67, 5, 53
 LADDER = {"v12": [(2000, 155, 73, 71.0), (2100, 96, 70, 63.5)],
           "v13": [(2000, 235, 86, 79.5), (2100, 186, 79, 74.5), (2200, 100, 71, 64.0),
                   (2300, 85, 68, 62.0), (2400, 14, 66, 52.0)]}
+# round-robin v4-v13, 10+0.1, 50 games per pair, 2250 games (cutechess output): (label, elo vs pool, err, score %)
+ROUND_ROBIN = [("v4", -215, 27, 22.4), ("v5", -170, 24, 27.3), ("v6", -161, 25, 28.3), ("v7", -116, 27, 33.9),
+               ("v8", -33, 27, 45.2), ("v9", -48, 26, 43.1), ("v10", 68, 28, 59.7), ("v11", 146, 31, 69.9),
+               ("v12", 254, 37, 81.2), ("v13", 361, 42, 88.9)]
 
 
 def score(elo):
@@ -116,6 +120,30 @@ def chart_per_version(mode):
            "100-game matches vs the previous version (v9: 50 games, v11: 200); vertical line = uncertainty (95% confidence); label = time control")
     fig.subplots_adjust(left=0.1, right=0.97, top=0.8, bottom=0.16)
     save(fig, "elo_per_version", mode)
+
+
+def chart_round_robin(mode):
+    """All versions on one Elo scale from the round-robin, shifted so that v4 = 0."""
+    t = THEMES[mode]
+    fig, ax = base(t)
+    ref = ROUND_ROBIN[0][1]
+    x = list(range(len(ROUND_ROBIN)))
+    y = [elo - ref for _, elo, _, _ in ROUND_ROBIN]
+    ax.plot(x, y, color=t["s1"], linewidth=2, solid_joinstyle="round", solid_capstyle="round", zorder=3)
+    for xi, yi, (lab, elo, err, p) in zip(x, y, ROUND_ROBIN):
+        ax.errorbar(xi, yi, yerr=err, fmt="none", ecolor=t["muted"], elinewidth=1, capsize=3, zorder=2)
+        dot(ax, xi, yi, t)
+        if xi:
+            ax.annotate(f"+{yi}", (xi, yi + err), xytext=(0, 4), textcoords="offset points",
+                        ha="center", va="bottom", fontsize=9, color=t["ink"])
+    ax.set_xticks(x, [f"{s[0]}\n{s[3]:.0f}%" for s in ROUND_ROBIN])
+    ax.set_xlim(-0.5, len(x) - 0.5)
+    ax.set_ylim(-60, max(y) + 90)
+    ax.set_ylabel("Elo relative to v4", fontsize=9, color=t["muted"])
+    titles(fig, t, "Strength of every version on one scale",
+           "Round-robin v4-v13 at 10+0.1, 2250 games (50 per pair); vertical line = uncertainty (95% confidence); % = total score")
+    fig.subplots_adjust(left=0.1, right=0.97, top=0.8, bottom=0.16)
+    save(fig, "elo_round_robin", mode)
 
 
 def chart_vs_sf(mode):
@@ -368,6 +396,7 @@ def chart_lichess(mode):
 for m in ("light", "dark"):
     chart_progression(m)
     chart_per_version(m)
+    chart_round_robin(m)
     chart_stockfish(m)
     chart_depth(m)
     if os.path.exists(os.path.join(DATA, "bench_all_versions.csv")):
