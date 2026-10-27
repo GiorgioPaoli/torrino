@@ -10,12 +10,13 @@
 <!-- HERO GIF: must be the GIF of a whole GAME (animated), not of a single position.
      On the Lichess game page: "Share & export" -> GIF, or https://lichess1.org/game/export/gif/<GAME_ID>.gif
      Save it as docs/gifs/hero.gif (replacing the current image). -->
-<p align="center"><img src="docs/gifs/hero.gif" width="360" alt="TorrinoBOT playing a game on Lichess"></p>
+<p align="center"><img src="docs/gifs/hero.gif" width="360" alt="Torrino playing Stockfish UCI_Elo 2400"></p>
 
 <p align="center">
-Torrino plays bullet and blitz on Lichess as <a href="https://lichess.org/@/TorrinoBOT"><b>TorrinoBOT</b></a>
+<b>Torrino (White) vs Stockfish UCI_Elo 2400</b>, 10+0.1, local cutechess match.
+Torrino gives up a bishop with <b>20.Bg5!</b>, then forces mate with checks, ending with <b>24.e8=Q#</b>.<br>
+Torrino also plays bullet and blitz on Lichess as <a href="https://lichess.org/@/TorrinoBOT"><b>TorrinoBOT</b></a>
 (bullet 2058, blitz 1897 on October 26, 2026).<br>
-Every version is checked for correctness and measured in engine-vs-engine matches; the full log is in <a href="VERSIONS.md">VERSIONS.md</a>.
 </p>
 
 ---
@@ -147,14 +148,6 @@ The engine was built in small steps; each version is a tag in the repository. Ho
 All local tests: 100-game matches at 10+0.1 (10 seconds plus 0.1 per move) in cutechess, with balanced openings and
 colours swapped, on one laptop (Intel i5, single thread per engine). The results of every match, benchmark and
 Lichess period, version by version, are in [VERSIONS.md](VERSIONS.md).
-
-How to read the numbers:
-- **Score** = (wins + half the draws) / games. 50% means equal strength; 79.5% means the engine took 79.5 points
-  out of 100 games.
-- **Elo difference** is the score converted to a rating gap, given with its uncertainty: **+70 ± 64** means the
-  measured difference is +70, and with 95% confidence the true one lies between +6 and +134. 100 games give an
-  uncertainty of about ± 60-70 Elo, which is why small gains are not always significant.
-- In the charts, the vertical lines on bars and points show that uncertainty range.
 
 ### Strength across versions
 
